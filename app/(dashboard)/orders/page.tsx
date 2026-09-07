@@ -1,11 +1,11 @@
 "use client";
 
-import { OrdersActionBar } from "@/components/orders_ dashboard_components/OrdersActionBar";
-import { OrderSearchFilterBar } from "@/components/orders_ dashboard_components/OrderSearchFilterBar";
-import { OrdersTable } from "@/components/orders_ dashboard_components/OrdersTable";
-import { OrderStatusFilter } from "@/components/orders_ dashboard_components/OrderStatusFilter";
-import PromotionalBanner from "@/components/orders_ dashboard_components/PromotionalBannar";
-import { StatItem } from "@/components/orders_ dashboard_components/StatItem";
+import { OrdersActionBar } from "@/components/DashboardComponents/OrdersActionBar";
+import { OrderSearchFilterBar } from "@/components/DashboardComponents/OrderSearchFilterBar";
+import { OrdersTable } from "@/components/DashboardComponents/OrdersTable";
+import { OrderStatusFilter } from "@/components/DashboardComponents/OrderStatusFilter";
+import PromotionalBanner from "@/components/DashboardComponents/PromotionalBannar";
+import { StatItem } from "@/components/DashboardComponents/StatItem";
 import { Card } from "@/components/ui/card";
 import { orders } from "@/lib/orders-data";
 import { OrderStatus } from "@/lib/types";

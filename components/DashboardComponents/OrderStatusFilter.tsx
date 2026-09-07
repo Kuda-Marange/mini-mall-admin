@@ -1,4 +1,4 @@
-import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { type OrderStatus } from "../../lib/types";
 
 interface OrderStatusFilterProps {

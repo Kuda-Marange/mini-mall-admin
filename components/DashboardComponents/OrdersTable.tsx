@@ -1,7 +1,7 @@
 import { type Order } from "../../lib/types";
-import { Checkbox } from "../../components/ui/checkbox";
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
+import { Checkbox } from "../ui/checkbox";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import { MoreVertical, ChevronsUpDown } from "lucide-react";
 
 interface OrdersTableProps {
