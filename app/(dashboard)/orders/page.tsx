@@ -2,6 +2,7 @@
 
 import { OrdersActionBar } from "@/components/orders_ dashboard_components/OrdersActionBar";
 import { OrderSearchFilterBar } from "@/components/orders_ dashboard_components/OrderSearchFilterBar";
+import { OrdersTable } from "@/components/orders_ dashboard_components/OrdersTable";
 import { OrderStatusFilter } from "@/components/orders_ dashboard_components/OrderStatusFilter";
 import PromotionalBanner from "@/components/orders_ dashboard_components/PromotionalBannar";
 import { StatItem } from "@/components/orders_ dashboard_components/StatItem";
@@ -12,17 +13,29 @@ import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
 
 export default function OrdersPage() {
+  //For search
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
   const [view, setView] = useState<"grid" | "list">("list");
 
-
+  //for the stats cards
   const totalOrders = orders.length;
   const returns = orders.filter((o) => o.status === "cancelled").length;
   const fulfilledOrders = orders.filter(
     (o) => o.status === "shipped" || o.status === "delivered"
   ).length;
   const deliveredOrders = orders.filter((o) => o.status === "delivered").length;
+
+  //Filter orders for the Order Table
+  const filteredOrders = orders
+    .filter((o) => statusFilter === "all" || o.status === statusFilter)
+    .filter((o) =>
+      search.trim() === ""
+        ? true
+        : o.customerName.toLowerCase().includes(search.toLowerCase()) ||
+          o.id.toLowerCase().includes(search.toLowerCase())
+    );
+
 
   return (
 
@@ -60,6 +73,9 @@ export default function OrdersPage() {
         view={view}
         onViewChange={setView}
       />
+
+      {/* TABLE TO FILTER ORDERS*/}
+      <OrdersTable orders={filteredOrders} />
     </div>
   );
 }
