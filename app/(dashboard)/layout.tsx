@@ -13,12 +13,12 @@ export default async function DashboardLayout({
   const defaultOpen = sidebarState === undefined ? true : sidebarState === "true";
 
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
-      <AppSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Navbar userName="Kudakwashe Marange" notificationCount={4} />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
-      </div>
-    </SidebarProvider>
+    <SidebarProvider defaultOpen={defaultOpen} className="h-screen">
+  <AppSidebar />
+  <div className="flex flex-1 flex-col overflow-hidden">
+    <Navbar userName="Kudakwashe Marange" notificationCount={4} />
+    <main className="flex-1 overflow-y-auto p-6">{children}</main>
+  </div>
+</SidebarProvider>
   );
 }
