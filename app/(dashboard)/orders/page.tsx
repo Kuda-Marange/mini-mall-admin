@@ -1,11 +1,22 @@
+"use client";
+
 import { OrdersActionBar } from "@/components/orders_ dashboard_components/OrdersActionBar";
+import { OrderSearchFilterBar } from "@/components/orders_ dashboard_components/OrderSearchFilterBar";
+import { OrderStatusFilter } from "@/components/orders_ dashboard_components/OrderStatusFilter";
 import PromotionalBanner from "@/components/orders_ dashboard_components/PromotionalBannar";
 import { StatItem } from "@/components/orders_ dashboard_components/StatItem";
 import { Card } from "@/components/ui/card";
 import { orders } from "@/lib/orders-data";
+import { OrderStatus } from "@/lib/types";
 import { CalendarIcon } from "lucide-react";
+import { useState } from "react";
 
 export default function OrdersPage() {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
+  const [view, setView] = useState<"grid" | "list">("list");
+
+
   const totalOrders = orders.length;
   const returns = orders.filter((o) => o.status === "cancelled").length;
   const fulfilledOrders = orders.filter(
@@ -14,6 +25,7 @@ export default function OrdersPage() {
   const deliveredOrders = orders.filter((o) => o.status === "delivered").length;
 
   return (
+
     <div className="space-y-6">
       {/* THE PROMOTIONAL BANNER FOR THE ORDERS PAGE*/}
       <PromotionalBanner />
