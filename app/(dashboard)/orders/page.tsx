@@ -39,6 +39,15 @@ export default function OrdersPage() {
           <StatItem label="Delivered orders" value={deliveredOrders} />
         </div>
       </Card>
+
+      {/* THIS IS THE ORDER_STATUS_FILTER AND THE ORDER_FILTER_BAR*/}
+      <OrderStatusFilter value={statusFilter} onChange={setStatusFilter} />
+      <OrderSearchFilterBar
+        search={search}
+        onSearchChange={setSearch}
+        view={view}
+        onViewChange={setView}
+      />
     </div>
   );
 }
