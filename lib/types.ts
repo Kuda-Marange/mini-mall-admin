@@ -8,5 +8,5 @@ export interface Order {
   pizzaName: string;
   amountInCents: number;
   status: OrderStatus;
-  orderedAt: string; // ISO date string, e.g. "2026-08-15"
+  orderedAt: string; // e.g. "2026-08-15"
 }
