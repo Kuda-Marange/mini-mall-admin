@@ -71,11 +71,11 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.65 0.19 40);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --chart-1: oklch(0.65 0.19 40);
+  --chart-2: oklch(0.6 0.15 200); /* a blue */
+  --chart-3: oklch(0.7 0.15 145); /* a green, matches --success */
+  --chart-4: oklch(0.75 0.15 85); /* an amber, matches --warning */
+  --chart-5: oklch(0.55 0.2 320); /* a purple */
   --radius: 0.625rem;
   --sidebar: oklch(0.22 0.03 145);
   --sidebar-foreground: oklch(0.95 0.01 100);
@@ -110,7 +110,7 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.65 0.19 40);
-  --chart-1: oklch(0.87 0 0);
+  --chart-1: oklch(0.65 0.19 40);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
@@ -139,15 +139,14 @@
   html {
     @apply font-sans;
   }
-
 }
 
 @layer utilities {
   .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;     /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
   .no-scrollbar::-webkit-scrollbar {
-    display: none;             /* Chrome, Safari, Brave (Chromium-based) */
+    display: none; /* Chrome, Safari, Brave (Chromium-based) */
   }
 }
