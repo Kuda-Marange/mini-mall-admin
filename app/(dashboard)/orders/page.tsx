@@ -11,6 +11,8 @@ import { orders } from "@/lib/orders-data";
 import { OrderStatus } from "@/lib/types";
 import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
+import { columns } from "@/components/DashboardComponents/columns";
+import { OrdersDataTable } from "@/components/DashboardComponents/OrdersDataTable";
 
 export default function OrdersPage() {
   //For search
@@ -75,7 +77,7 @@ export default function OrdersPage() {
       />
 
       {/* TABLE TO FILTER ORDERS*/}
-      <OrdersTable orders={filteredOrders} />
+      <OrdersDataTable columns={columns} data={filteredOrders} />
     </div>
   );
 }

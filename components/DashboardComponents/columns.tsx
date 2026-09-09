@@ -1,0 +1,37 @@
+"use client";
+
+import { ColumnDef } from "@tanstack/react-table";
+import { type Order } from "@/lib/types";
+import { formatPrice } from "@/lib/format-price";
+import { Badge } from "../ui/badge";
+
+
+const STATUS_LABELS: Record<Order["status"], string> = {
+  pending: "Unpaid",
+  shipped: "Need to ship",
+  delivered: "Completed",
+  cancelled: "Cancellation",
+};
+
+export const columns: ColumnDef<Order>[] = [
+  {
+    accessorKey: "id",
+    header: "Order",
+  },
+  {
+    accessorKey: "customerName",
+    header: "Customer",
+  },
+  {
+    accessorKey: "amountInCents",
+    header: "Total",
+    cell: ({ row }) => formatPrice(row.original.amountInCents),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => (
+      <Badge variant="outline">{STATUS_LABELS[row.original.status]}</Badge>
+    ),
+  },
+];
