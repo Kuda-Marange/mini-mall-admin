@@ -18,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
+import { ThemeToggle } from "./theme-toggle-button"
 
 interface NavbarProps {
   title?: string
@@ -65,7 +66,10 @@ export function Navbar({
         />
       </div>
 
+      
+
       <div className="ml-auto flex items-center gap-3">
+        <ThemeToggle />
         <Button
           variant="outline"
           size="icon"
