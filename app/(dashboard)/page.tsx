@@ -1,11 +1,37 @@
-import Image from "next/image";
+import { OrdersOverTimeChart } from "@/components/DashboardComponents/OrdersOverTimeChart";
+import PromotionalBanner from "@/components/DashboardComponents/PromotionalBannar";
+import { StatItem } from "@/components/DashboardComponents/StatItem";
+import { Card } from "@/components/ui/card";
+import { orders } from "@/lib/orders-data";
+import { CalendarIcon } from "lucide-react";
 
 export default function Home() {
+
+//for the stats cards
+  const totalOrders = orders.length;
+  const returns = orders.filter((o) => o.status === "cancelled").length;
+  const fulfilledOrders = orders.filter(
+    (o) => o.status === "shipped" || o.status === "delivered"
+  ).length;
+  const deliveredOrders = orders.filter((o) => o.status === "delivered").length;
+
   return (
-   <div className="flex flex-col justify-center items-center min-h-screen gap-4">
-      <h1 className="text-2xl font-bold">This is the Home Page. Full app coming next week! </h1>
-      <p className="text-muted-foreground">Navigate to /orders to see the orders page</p>
-   </div> 
+    <div className="space-y-6">
+      {/* THE PROMOTIONAL BANNER FOR THE ORDERS PAGE*/}
+      <PromotionalBanner />
+
+       {/* THE STATUS CARDS GO HERE*/}
+      <Card className="border-none shadow-sm h-auto sm:h-30">
+        <div className="flex flex-col sm:flex-row items-stretch divide-y sm:divide-y-0 sm:divide-x divide-border">
+          <StatItem label="Total orders" value={totalOrders} />
+          <StatItem label="Returns" value={returns} />
+          <StatItem label="Fulfilled orders" value={fulfilledOrders} />
+          <StatItem label="Delivered orders" value={deliveredOrders} />
+        </div>
+      </Card>
       
+      {/* THE RECHART SHADCN COMPONENT GOES HERE*/}
+      <OrdersOverTimeChart />
+    </div>
   );
 }
