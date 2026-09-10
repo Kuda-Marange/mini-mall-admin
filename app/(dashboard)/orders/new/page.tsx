@@ -92,12 +92,12 @@ export default function NewOrderPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Create Order</h1>
+      <h1 className="text-2xl font-bold font-heading text-foreground">Create Order</h1>
 
       <div className="max-w-lg mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Order details</CardTitle>
+            <CardTitle className="text-base font-heading">Order details</CardTitle>
           </CardHeader>
           <CardContent>
             <Form {...form}>
