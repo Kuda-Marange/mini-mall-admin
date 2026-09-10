@@ -6,10 +6,10 @@ import { formatPrice } from "@/lib/format-price";
 import { Badge } from "../ui/badge";
 
 const STATUS_LABELS: Record<Order["status"], string> = {
-  pending: "Unpaid",
-  shipped: "Need to ship",
-  delivered: "Completed",
-  cancelled: "Cancellation",
+  pending: "Pending",
+  shipped: "Shipped",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
 };
 
 const STATUS_BADGE_CLASSES: Record<Order["status"], string> = {

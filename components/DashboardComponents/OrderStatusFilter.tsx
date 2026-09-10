@@ -8,10 +8,10 @@ interface OrderStatusFilterProps {
 
 const STATUSES: { value: OrderStatus | "all"; label: string }[] = [
   { value: "all", label: "All" },
-  { value: "pending", label: "Unpaid" },
-  { value: "shipped", label: "Need to ship" },
-  { value: "delivered", label: "Completed" },
-  { value: "cancelled", label: "Cancellation" },
+  { value: "pending", label: "Pending" },
+  { value: "shipped", label: "Shipped" },
+  { value: "delivered", label: "Delivered" },
+  { value: "cancelled", label: "Cancelled" },
 ];
 
 export function OrderStatusFilter({ value, onChange }: OrderStatusFilterProps) {
