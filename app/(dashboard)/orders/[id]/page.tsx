@@ -127,7 +127,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-semibold tracking-tight">
+              <h1 className="text-2xl font-semibold font-heading tracking-tight">
                 {foundOrder.id}
               </h1>
 
@@ -174,7 +174,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           {/* ITEMS */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Items</CardTitle>
+              <CardTitle className="text-base font-heading">Items</CardTitle>
             </CardHeader>
 
             <CardContent>
@@ -202,7 +202,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           {/* ORDER PROGRESS */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Order progress</CardTitle>
+              <CardTitle className="text-base font-heading">Order progress</CardTitle>
             </CardHeader>
 
             <CardContent>
@@ -213,7 +213,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           {/* CUSTOMER */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Customer details</CardTitle>
+              <CardTitle className="text-base font-heading">Customer details</CardTitle>
             </CardHeader>
 
             <CardContent>
@@ -235,7 +235,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           {/* ORDER SUMMARY */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Order summary</CardTitle>
+              <CardTitle className="text-base font-heading">Order summary</CardTitle>
             </CardHeader>
 
             <CardContent>
@@ -256,7 +256,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           {/* STATUS */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Order status</CardTitle>
+              <CardTitle className="text-base font-heading">Order status</CardTitle>
             </CardHeader>
 
             <CardContent>
