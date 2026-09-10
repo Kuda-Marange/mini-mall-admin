@@ -78,7 +78,7 @@ export function Navbar({
         >
           <Bell className="h-4 w-4" />
           {notificationCount > 0 ? (
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-medium text-white">
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
               {notificationCount > 9 ? "9+" : notificationCount}
             </span>
           ) : null}
@@ -89,7 +89,7 @@ export function Navbar({
             <button className="rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
               <Avatar className="h-9 w-9">
                 <AvatarImage src={userImageUrl} alt={userName} />
-                <AvatarFallback className="bg-orange-500 text-white">
+                <AvatarFallback className="bg-primary text-primary-foreground">
                   {initials}
                 </AvatarFallback>
               </Avatar>
