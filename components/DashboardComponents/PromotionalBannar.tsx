@@ -1,4 +1,5 @@
 import { TrendingUp } from "lucide-react";
+import Link from "next/link"
 
 export default function PromotionalBanner() {
   return (
@@ -11,10 +12,10 @@ export default function PromotionalBanner() {
           <p className="text-sidebar-foreground/70 mt-1 text-sm sm:text-base">
             Welcome Back!
           </p>
-          <button className=" flex gap-2 mt-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium text-sm sm:text-base">
+          <Link href="/orders" className=" flex gap-2 mt-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium text-sm sm:text-base">
             Go to orders page
             <TrendingUp />
-          </button>
+          </Link>
         </div>
       </div>
     </div>
