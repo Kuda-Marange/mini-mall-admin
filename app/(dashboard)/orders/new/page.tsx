@@ -28,7 +28,9 @@ import { orders } from "@/lib/orders-data";
 import { type Order } from "@/lib/types";
 
 const orderFormSchema = z.object({
-  customerName: z.string().min(2, "Customer name must be at least 2 characters"),
+  customerName: z
+    .string()
+    .min(2, "Customer name must be at least 2 characters"),
   pizzaName: z.string().min(1, "Please select a pizza"),
   quantity: z.number().int().min(1, "Quantity must be at least 1"),
 });
@@ -65,7 +67,9 @@ export default function NewOrderPage() {
   });
 
   function onSubmit(values: OrderFormValues) {
-    const selectedPizza = PIZZA_OPTIONS.find((p) => p.name === values.pizzaName);
+    const selectedPizza = PIZZA_OPTIONS.find(
+      (p) => p.name === values.pizzaName
+    );
     const amountInCents = (selectedPizza?.priceInCents ?? 0) * values.quantity;
 
     const newOrder: Order = {
@@ -87,81 +91,91 @@ export default function NewOrderPage() {
   }
 
   return (
-    <div className="max-w-lg space-y-6">
+    <div className="space-y-6">
       <h1 className="text-2xl font-bold text-foreground">Create Order</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Order details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="customerName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Customer name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Tendai Moyo" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="pizzaName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Pizza</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+      <div className="max-w-lg mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Order details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
+                <FormField
+                  control={form.control}
+                  name="customerName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Customer name</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a pizza" />
-                        </SelectTrigger>
+                        <Input placeholder="e.g. Tendai Moyo" {...field} />
                       </FormControl>
-                      <SelectContent>
-                        {PIZZA_OPTIONS.map((pizza) => (
-                          <SelectItem key={pizza.name} value={pizza.name}>
-                            {pizza.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="quantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={1}
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="pizzaName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pizza</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a pizza" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {PIZZA_OPTIONS.map((pizza) => (
+                            <SelectItem key={pizza.name} value={pizza.name}>
+                              {pizza.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <Button type="submit" className="w-full">
-                Create Order
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                <FormField
+                  control={form.control}
+                  name="quantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantity</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button type="submit" className="w-full">
+                  Create Order
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
