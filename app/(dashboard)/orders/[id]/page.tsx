@@ -73,6 +73,19 @@ function StatusIconDisplay({
   }
 }
 
+// A plain, standalone function — NOT part of any component's render logic.
+// It does its own independent lookup into the shared `orders` array and
+// mutates it there, entirely separate from whatever a component computed
+// for its own render (that separation is what keeps React Compiler happy —
+// mutating a variable derived during render is what it warns against, not
+// a side effect like this happening outside render at all).
+function updateOrderStatus(orderId: string, newStatus: OrderStatus) {
+  const order = orders.find((o) => o.id === orderId);
+  if (order) {
+    order.status = newStatus;
+  }
+}
+
 export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const router = useRouter();
   const { id } = use(params);
@@ -84,6 +97,16 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   }
 
   const [status, setStatus] = useState<OrderStatus>(foundOrder.status);
+
+  // Updates this page's own display immediately, AND updates the shared
+  // `orders` array (via the standalone function above) so /orders and the
+  // stats bar reflect the change too — until the dev server restarts or
+  // the page is refreshed, since there's no real backend behind this
+  // fixture data.
+  const handleStatusChange = (newStatus: OrderStatus) => {
+    setStatus(newStatus);
+    updateOrderStatus(foundOrder.id, newStatus);
+  };
 
   return (
     <div className="space-y-6">
@@ -123,7 +146,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
         <div className="flex items-center gap-2">
           <Select
             value={status}
-            onValueChange={(value) => setStatus(value as OrderStatus)}
+            onValueChange={(value) => handleStatusChange(value as OrderStatus)}
           >
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Update status" />
