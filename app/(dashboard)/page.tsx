@@ -3,7 +3,7 @@ import PromotionalBanner from "@/components/DashboardComponents/PromotionalBanna
 import { StatItem } from "@/components/DashboardComponents/StatItem";
 import { Card } from "@/components/ui/card";
 import { orders } from "@/lib/orders-data";
-import { CalendarIcon } from "lucide-react";
+
 
 export default function Home() {
 
@@ -18,7 +18,7 @@ export default function Home() {
   return (
     <div className="space-y-6">
       {/* THE PROMOTIONAL BANNER FOR THE ORDERS PAGE*/}
-      <PromotionalBanner />
+      <PromotionalBanner totalOrders={totalOrders} />
 
        {/* THE STATUS CARDS GO HERE*/}
       <Card className="border-none shadow-sm h-auto sm:h-30">
