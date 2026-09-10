@@ -1,5 +1,6 @@
 import { Button } from "../ui/button";
 import { Upload, Plus } from "lucide-react";
+import Link from "next/link";
 
 export function OrdersActionBar() {
   return (
@@ -20,10 +21,13 @@ export function OrdersActionBar() {
       >
         <Plus className="h-4 w-4" />
       </Button>
-      <Button className="bg-primary text-primary-foreground hover:bg-primary/90 hidden sm:inline-flex">
+      <Link
+        href="/orders/new"
+        className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 hidden sm:inline-flex items-center"
+      >
         <Plus className="mr-2 h-4 w-4" />
         Create Order
-      </Button>
+      </Link>
     </div>
   );
 }
