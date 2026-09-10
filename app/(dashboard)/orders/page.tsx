@@ -38,7 +38,7 @@ export default function OrdersPage() {
 
       {/* THE ORDERS ACTION BELOW*/}
       <div className="flex items-center justify-between px-2">
-        <h1 className="text-2xl font-bold text-foreground">Orders</h1>
+        <h1 className="text-2xl font-bold font-heading text-foreground">Orders</h1>
         <OrdersActionBar />
       </div>
 
