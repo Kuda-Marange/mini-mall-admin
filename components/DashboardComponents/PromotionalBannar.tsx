@@ -5,7 +5,7 @@ export default function PromotionalBanner() {
     <div className="space-y-6">
       <div className="rounded-xl bg-sidebar text-sidebar-foreground p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg sm:text-xl font-semibold">
+          <h2 className="text-lg sm:text-xl font-bold font-heading">
             Dashboard Home Page
           </h2>
           <p className="text-sidebar-foreground/70 mt-1 text-sm sm:text-base">

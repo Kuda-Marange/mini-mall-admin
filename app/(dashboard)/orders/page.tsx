@@ -3,16 +3,18 @@
 import { OrdersActionBar } from "@/components/DashboardComponents/OrdersActionBar";
 import { OrderSearchFilterBar } from "@/components/DashboardComponents/OrderSearchFilterBar";
 import { OrderStatusFilter } from "@/components/DashboardComponents/OrderStatusFilter";
-import { StatItem } from "@/components/DashboardComponents/StatItem";
-import { Card } from "@/components/ui/card";
 import { orders } from "@/lib/orders-data";
 import { OrderStatus } from "@/lib/types";
-import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { columns } from "@/components/DashboardComponents/columns";
 import { OrdersDataTable } from "@/components/DashboardComponents/OrdersDataTable";
+import { useRouter } from "next/navigation";
 
 export default function OrdersPage() {
+
+  const router = useRouter();
+
+
   //For search
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
@@ -50,7 +52,7 @@ export default function OrdersPage() {
       />
 
       {/* TABLE TO FILTER ORDERS*/}
-      <OrdersDataTable columns={columns} data={filteredOrders} />
+      <OrdersDataTable columns={columns} data={filteredOrders} onRowClick={(order) => router.push(`/orders/${order.id}`)} />
     </div>
   );
 }

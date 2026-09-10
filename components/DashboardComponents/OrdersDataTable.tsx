@@ -10,6 +10,7 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -24,11 +25,17 @@ import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  /** Called when a row (outside of interactive elements like links/buttons)
+   *  is clicked. Pass a function that navigates using the row's own data,
+   *  e.g. (row) => router.push(`/orders/${row.id}`). Optional — if omitted,
+   *  rows are not clickable. */
+  onRowClick?: (row: TData) => void;
 }
 
 export function OrdersDataTable<TData, TValue>({
   columns,
   data,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -95,7 +102,11 @@ export function OrdersDataTable<TData, TValue>({
           <TableBody>
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow
+                  key={row.id}
+                  onClick={() => onRowClick?.(row.original)}
+                  className={onRowClick ? "cursor-pointer hover:bg-muted/50" : undefined}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
