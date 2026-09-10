@@ -40,15 +40,8 @@ function getStatusLabel(status: OrderStatus) {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
-function getStatusVariant(status: OrderStatus) {
-  switch (status) {
-    case "delivered":
-      return "default";
-    case "cancelled":
-      return "destructive";
-    default:
-      return "secondary";
-  }
+function getStatusVariant(status: OrderStatus): "outline" {
+  return "outline";
 }
 
 /* Renders the correct icon for a status directly, instead of returning
@@ -131,7 +124,10 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                 {foundOrder.id}
               </h1>
 
-              <Badge variant={getStatusVariant(status)} className="gap-1">
+              <Badge
+                variant={getStatusVariant(status)}
+                className="gap-1 bg-primary/10 text-primary border-primary/30"
+              >
                 <StatusIconDisplay status={status} className="h-3 w-3" />
                 {getStatusLabel(status)}
               </Badge>
@@ -304,9 +300,9 @@ function OrderProgress({ status }: OrderProgressProps) {
 
   if (status === "cancelled") {
     return (
-      <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
-          <X className="h-5 w-5 text-destructive" />
+      <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+          <X className="h-5 w-5 text-primary" />
         </div>
 
         <div>

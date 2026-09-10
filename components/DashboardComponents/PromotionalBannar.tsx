@@ -19,7 +19,7 @@ export default function PromotionalBanner({
       <div className="relative flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h2 className="text-2xl font-bold font-heading tracking-tight sm:text-3xl">
-            Buongiorno, {userName}
+            Welcome back, {userName}!
           </h2>
           <p className="mt-2 max-w-md text-sm text-sidebar-foreground/70 sm:text-base">
             Your pizzeria has served {totalOrders} orders so far. The ovens are

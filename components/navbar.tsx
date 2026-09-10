@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
 import { ThemeToggle } from "./theme-toggle-button"
+import { useSearch } from "@/lib/search-context"
 
 interface NavbarProps {
   title?: string
@@ -26,7 +27,6 @@ interface NavbarProps {
   userEmail?: string
   userImageUrl?: string
   notificationCount?: number
-  onSearch?: (value: string) => void
   onLogout?: () => void
 }
 
@@ -36,9 +36,9 @@ export function Navbar({
   userEmail,
   userImageUrl,
   notificationCount = 0,
-  onSearch,
   onLogout,
 }: NavbarProps) {
+  const { search, setSearch } = useSearch()
   const initials = userName
     .split(" ")
     .map((n) => n[0])
@@ -62,7 +62,8 @@ export function Navbar({
           type="search"
           placeholder="Search..."
           className="pl-9"
-          onChange={(e) => onSearch?.(e.target.value)}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 

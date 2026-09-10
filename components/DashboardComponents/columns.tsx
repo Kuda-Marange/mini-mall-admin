@@ -13,13 +13,24 @@ const STATUS_LABELS: Record<Order["status"], string> = {
 };
 
 const STATUS_BADGE_CLASSES: Record<Order["status"], string> = {
-  pending: "bg-warning/15 text-warning-foreground border-warning/30",
+  pending: "bg-primary/10 text-primary border-primary/30",
   shipped: "bg-primary/10 text-primary border-primary/30",
-  delivered: "bg-success/15 text-success-foreground border-success/30",
-  cancelled: "bg-destructive/10 text-destructive border-destructive/30",
+  delivered: "bg-primary/10 text-primary border-primary/30",
+  cancelled: "bg-primary/10 text-primary border-primary/30",
 };
 
 export const columns: ColumnDef<Order>[] = [
+  {
+    id: "pizzaImage",
+    header: "",
+    cell: ({ row }) => (
+      <img
+        src="/pizza.jpg"
+        alt={row.original.pizzaName}
+        className="h-9 w-9 rounded-full object-cover"
+      />
+    ),
+  },
   {
     accessorKey: "id",
     header: "Order",
