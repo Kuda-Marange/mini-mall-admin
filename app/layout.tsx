@@ -36,7 +36,7 @@ export default function RootLayout({
     >
       <body
         className={cn(
-          "bg-background text-foreground antialiased h-screen overflow-hidden"
+          "bg-background text-foreground antialiased h-dvh overflow-hidden"
         )}
       >
         <ThemeProvider
