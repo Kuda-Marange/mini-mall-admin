@@ -1,11 +1,19 @@
 "use client";
 
-import { use, useState } from "react";
-import { notFound, useRouter } from "next/navigation";
-import { ArrowLeft, Check, Clock, Package, Truck, X } from "lucide-react";
+import { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  Check,
+  Clock,
+  Loader2,
+  Package,
+  Trash2,
+  Truck,
+  X,
+} from "lucide-react";
 
-import { orders } from "@/lib/orders-data";
-import { type OrderStatus } from "@/lib/types";
+import { type Order, type OrderStatus } from "@/lib/types";
 import { formatPrice } from "@/lib/format-price";
 
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +32,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { showToast } from "@/components/ui/toast";
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>;
@@ -40,15 +61,8 @@ function getStatusLabel(status: OrderStatus) {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
-function getStatusVariant(status: OrderStatus) {
-  switch (status) {
-    case "delivered":
-      return "default";
-    case "cancelled":
-      return "destructive";
-    default:
-      return "secondary";
-  }
+function getStatusVariant(status: OrderStatus): "outline" {
+  return "outline";
 }
 
 /* Renders the correct icon for a status directly, instead of returning
@@ -73,40 +87,182 @@ function StatusIconDisplay({
   }
 }
 
-// A plain, standalone function — NOT part of any component's render logic.
-// It does its own independent lookup into the shared `orders` array and
-// mutates it there, entirely separate from whatever a component computed
-// for its own render (that separation is what keeps React Compiler happy —
-// mutating a variable derived during render is what it warns against, not
-// a side effect like this happening outside render at all).
-function updateOrderStatus(orderId: string, newStatus: OrderStatus) {
-  const order = orders.find((o) => o.id === orderId);
-  if (order) {
-    order.status = newStatus;
-  }
-}
-
 export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const router = useRouter();
   const { id } = use(params);
 
-  const foundOrder = orders.find((order) => order.id === id);
+  const [order, setOrder] = useState<Order | null>(null);
+  const [status, setStatus] = useState<OrderStatus | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  if (!foundOrder) {
-    notFound();
+  // Fetches the order from the API route on mount / whenever `id` changes.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadOrder() {
+      setIsLoading(true);
+      setLoadError(null);
+
+      try {
+        const response = await fetch(`/api/orders/${id}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          if (!cancelled) setLoadError(result.error ?? "Order not found.");
+          return;
+        }
+
+        if (!cancelled) {
+          setOrder(result as Order);
+          setStatus((result as Order).status);
+        }
+      } catch (err) {
+        console.error("Failed to load order:", err);
+        if (!cancelled) setLoadError("Something went wrong loading this order.");
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadOrder();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  // Updates the status optimistically, then PATCHes the API route.
+  // Reverts if the request fails.
+  const handleStatusChange = async (newStatus: OrderStatus) => {
+    if (!order) return;
+
+    const previousStatus = status;
+    setStatus(newStatus);
+
+    try {
+      const response = await fetch(`/api/orders/${order.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        setStatus(previousStatus);
+      }
+    } catch (err) {
+      console.error("Failed to update order status:", err);
+      setStatus(previousStatus);
+    }
+  };
+
+  // Deletes the order from the confirm dialog, shows a success toast,
+  // then returns to the orders list.
+  const handleDelete = async (event: React.MouseEvent) => {
+    event.preventDefault(); // keep the dialog open while the request runs
+
+    if (!order) return;
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const response = await fetch(`/api/orders/${order.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        setDeleteError(result.error ?? "Failed to delete order.");
+        setIsDeleting(false);
+        return;
+      }
+
+      setIsDeleteDialogOpen(false);
+      showToast({
+        title: "Order deleted",
+        description: `${order.customerName}'s order ${order.id} was deleted.`,
+      });
+      router.push("/orders");
+    } catch (err) {
+      console.error("Failed to delete order:", err);
+      setDeleteError("Something went wrong deleting this order.");
+      setIsDeleting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-32" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+          <div className="space-y-6">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-16 w-16 rounded-lg" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <Skeleton className="h-16 w-full" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="space-y-3 pt-6">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card>
+              <CardContent className="space-y-3 pt-6">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-5 w-full" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <Skeleton className="h-14 w-full" />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  const [status, setStatus] = useState<OrderStatus>(foundOrder.status);
-
-  // Updates this page's own display immediately, AND updates the shared
-  // `orders` array (via the standalone function above) so /orders and the
-  // stats bar reflect the change too — until the dev server restarts or
-  // the page is refreshed, since there's no real backend behind this
-  // fixture data.
-  const handleStatusChange = (newStatus: OrderStatus) => {
-    setStatus(newStatus);
-    updateOrderStatus(foundOrder.id, newStatus);
-  };
+  if (loadError || !order || !status) {
+    return (
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" onClick={() => router.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to orders
+        </Button>
+        <p className="text-sm text-muted-foreground">
+          {loadError ?? "Order not found."}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -127,18 +283,21 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-semibold tracking-tight">
-                {foundOrder.id}
+              <h1 className="text-2xl font-semibold font-heading tracking-tight">
+                {order.id}
               </h1>
 
-              <Badge variant={getStatusVariant(status)} className="gap-1">
+              <Badge
+                variant={getStatusVariant(status)}
+                className="gap-1 bg-primary/10 text-primary border-primary/30"
+              >
                 <StatusIconDisplay status={status} className="h-3 w-3" />
                 {getStatusLabel(status)}
               </Badge>
             </div>
 
             <p className="mt-1 text-sm text-muted-foreground">
-              Order placed {foundOrder.orderedAt}
+              Order placed {order.orderedAt}
             </p>
           </div>
         </div>
@@ -160,6 +319,64 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
               ))}
             </SelectContent>
           </Select>
+
+          <AlertDialog
+            open={isDeleteDialogOpen}
+            onOpenChange={(open) => {
+              if (!isDeleting) setIsDeleteDialogOpen(open);
+            }}
+          >
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                disabled={isDeleting}
+                className="group/delete shrink-0"
+              >
+                {isDeleting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4 transition-transform duration-200 ease-out group-hover/delete:-rotate-12 group-active/delete:scale-90" />
+                )}
+                {isDeleting ? "Deleting…" : "Delete order"}
+              </Button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
+                  <Trash2 className="h-5 w-5 text-destructive" />
+                </div>
+
+                <AlertDialogTitle>Delete this order?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This permanently deletes order {order.id} for{" "}
+                  {order.customerName}. This action cannot be undone.
+                </AlertDialogDescription>
+
+                {deleteError && (
+                  <p className="text-sm text-destructive">{deleteError}</p>
+                )}
+              </AlertDialogHeader>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeleting}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="bg-destructive text-white hover:bg-destructive/90 focus-visible:border-destructive/40 focus-visible:ring-destructive/20"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  {isDeleting ? "Deleting…" : "Delete order"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
@@ -174,7 +391,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           {/* ITEMS */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Items</CardTitle>
+              <CardTitle className="text-base font-heading">Items</CardTitle>
             </CardHeader>
 
             <CardContent>
@@ -185,7 +402,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                   </div>
 
                   <div>
-                    <p className="font-medium">{foundOrder.pizzaName}</p>
+                    <p className="font-medium">{order.pizzaName}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Pizza order
                     </p>
@@ -193,7 +410,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                 </div>
 
                 <p className="font-medium">
-                  {formatPrice(foundOrder.amountInCents)}
+                  {formatPrice(order.amountInCents)}
                 </p>
               </div>
             </CardContent>
@@ -202,7 +419,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           {/* ORDER PROGRESS */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Order progress</CardTitle>
+              <CardTitle className="text-base font-heading">Order progress</CardTitle>
             </CardHeader>
 
             <CardContent>
@@ -213,16 +430,16 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           {/* CUSTOMER */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Customer details</CardTitle>
+              <CardTitle className="text-base font-heading">Customer details</CardTitle>
             </CardHeader>
 
             <CardContent>
               <div className="space-y-4">
-                <DetailRow label="Customer name" value={foundOrder.customerName} />
+                <DetailRow label="Customer name" value={order.customerName} />
                 <Separator />
-                <DetailRow label="Order ID" value={foundOrder.id} />
+                <DetailRow label="Order ID" value={order.id} />
                 <Separator />
-                <DetailRow label="Ordered" value={foundOrder.orderedAt} />
+                <DetailRow label="Ordered" value={order.orderedAt} />
               </div>
             </CardContent>
           </Card>
@@ -235,18 +452,18 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           {/* ORDER SUMMARY */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Order summary</CardTitle>
+              <CardTitle className="text-base font-heading">Order summary</CardTitle>
             </CardHeader>
 
             <CardContent>
               <div className="space-y-4">
-                <SummaryRow label="Subtotal" value={formatPrice(foundOrder.amountInCents)} />
+                <SummaryRow label="Subtotal" value={formatPrice(order.amountInCents)} />
                 <SummaryRow label="Discount" value={formatPrice(0)} />
                 <Separator />
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Total</span>
                   <span className="text-lg font-semibold">
-                    {formatPrice(foundOrder.amountInCents)}
+                    {formatPrice(order.amountInCents)}
                   </span>
                 </div>
               </div>
@@ -256,7 +473,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           {/* STATUS */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Order status</CardTitle>
+              <CardTitle className="text-base font-heading">Order status</CardTitle>
             </CardHeader>
 
             <CardContent>
@@ -304,9 +521,9 @@ function OrderProgress({ status }: OrderProgressProps) {
 
   if (status === "cancelled") {
     return (
-      <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
-          <X className="h-5 w-5 text-destructive" />
+      <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+          <X className="h-5 w-5 text-primary" />
         </div>
 
         <div>

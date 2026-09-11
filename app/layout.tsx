@@ -11,7 +11,7 @@ const geist = Geist({
 
 const syne = Syne({
   subsets: ["latin"],
-  variable: "--font-display",
+  variable: "--font-syne",
 });
 
 export const metadata: Metadata = {

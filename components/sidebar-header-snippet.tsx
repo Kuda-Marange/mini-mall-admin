@@ -32,7 +32,7 @@ export function SidebarHeaderBlock({ name, email, imageUrl }: SidebarHeaderBlock
             <a href="#">
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={imageUrl} alt={name} />
-                <AvatarFallback className="rounded-lg bg-orange-500 text-white">
+                <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
                   {initials}
                 </AvatarFallback>
               </Avatar>
