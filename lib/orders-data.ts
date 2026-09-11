@@ -1,7 +1,6 @@
 import { Order } from "./types";
 
 export const orders: Order[] = [
-  
   { id: "ORD-001", customerName: "Tendai Moyo", pizzaName: "Margherita", amountInCents: 899, status: "delivered", orderedAt: "2026-08-01" },
   { id: "ORD-002", customerName: "Rudo Chikafu", pizzaName: "Pepperoni", amountInCents: 1099, status: "shipped", orderedAt: "2026-08-02" },
   { id: "ORD-003", customerName: "Farai Gwenzi", pizzaName: "Hawaiian", amountInCents: 999, status: "pending", orderedAt: "2026-08-04" },

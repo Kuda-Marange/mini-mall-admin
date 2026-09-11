@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Bell, Search } from "lucide-react"
-import { Input } from "./ui/input"
+ import { Bell, Search } from "lucide-react"
+// import { Input } from "./ui/input"
 import { Button } from "./ui/button"
 import { SidebarTrigger } from "./ui/sidebar"
 import {
@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
 import { ThemeToggle } from "./theme-toggle-button"
+import { useSearch } from "@/lib/search-context"
 
 interface NavbarProps {
   title?: string
@@ -26,7 +27,6 @@ interface NavbarProps {
   userEmail?: string
   userImageUrl?: string
   notificationCount?: number
-  onSearch?: (value: string) => void
   onLogout?: () => void
 }
 
@@ -36,9 +36,9 @@ export function Navbar({
   userEmail,
   userImageUrl,
   notificationCount = 0,
-  onSearch,
   onLogout,
 }: NavbarProps) {
+  // const { search, setSearch } = useSearch()
   const initials = userName
     .split(" ")
     .map((n) => n[0])
@@ -57,13 +57,14 @@ export function Navbar({
       ) : null}
 
       <div className="relative flex-1 max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        {/* <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
           placeholder="Search..."
           className="pl-9"
-          onChange={(e) => onSearch?.(e.target.value)}
-        />
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        /> */}
       </div>
 
       
@@ -78,7 +79,7 @@ export function Navbar({
         >
           <Bell className="h-4 w-4" />
           {notificationCount > 0 ? (
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-medium text-white">
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
               {notificationCount > 9 ? "9+" : notificationCount}
             </span>
           ) : null}
@@ -89,7 +90,7 @@ export function Navbar({
             <button className="rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
               <Avatar className="h-9 w-9">
                 <AvatarImage src={userImageUrl} alt={userName} />
-                <AvatarFallback className="bg-orange-500 text-white">
+                <AvatarFallback className="bg-primary text-primary-foreground">
                   {initials}
                 </AvatarFallback>
               </Avatar>
