@@ -3,6 +3,7 @@ import { SidebarProvider } from "../../components/ui/sidebar";
 import { AppSidebar } from "../../components/app-sidebar";
 import { Navbar } from "../../components/navbar";
 import { SearchProvider } from "../../lib/search-context";
+import { Toaster } from "../../components/ui/toast";
 
 export default async function DashboardLayout({
   children,
@@ -28,6 +29,7 @@ export default async function DashboardLayout({
             {children}
           </main>
         </div>
+        <Toaster />
       </SidebarProvider>
     </SearchProvider>
   );

@@ -2,7 +2,16 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Clock, Package, Truck, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Clock,
+  Loader2,
+  Package,
+  Trash2,
+  Truck,
+  X,
+} from "lucide-react";
 
 import { type Order, type OrderStatus } from "@/lib/types";
 import { formatPrice } from "@/lib/format-price";
@@ -23,6 +32,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { showToast } from "@/components/ui/toast";
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>;
@@ -73,6 +94,9 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const [status, setStatus] = useState<OrderStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Fetches the order from the API route on mount / whenever `id` changes.
   useEffect(() => {
@@ -130,6 +154,41 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     } catch (err) {
       console.error("Failed to update order status:", err);
       setStatus(previousStatus);
+    }
+  };
+
+  // Deletes the order from the confirm dialog, shows a success toast,
+  // then returns to the orders list.
+  const handleDelete = async (event: React.MouseEvent) => {
+    event.preventDefault(); // keep the dialog open while the request runs
+
+    if (!order) return;
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const response = await fetch(`/api/orders/${order.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        setDeleteError(result.error ?? "Failed to delete order.");
+        setIsDeleting(false);
+        return;
+      }
+
+      setIsDeleteDialogOpen(false);
+      showToast({
+        title: "Order deleted",
+        description: `${order.customerName}'s order ${order.id} was deleted.`,
+      });
+      router.push("/orders");
+    } catch (err) {
+      console.error("Failed to delete order:", err);
+      setDeleteError("Something went wrong deleting this order.");
+      setIsDeleting(false);
     }
   };
 
@@ -206,6 +265,60 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
               ))}
             </SelectContent>
           </Select>
+
+          <AlertDialog
+            open={isDeleteDialogOpen}
+            onOpenChange={(open) => {
+              if (!isDeleting) setIsDeleteDialogOpen(open);
+            }}
+          >
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                size="icon"
+                className="group/delete shrink-0"
+              >
+                <Trash2 className="h-4 w-4 transition-transform duration-200 ease-out group-hover/delete:-rotate-12 group-active/delete:scale-90" />
+                <span className="sr-only">Delete order</span>
+              </Button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
+                  <Trash2 className="h-5 w-5 text-destructive" />
+                </div>
+
+                <AlertDialogTitle>Delete this order?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This permanently deletes order {order.id} for{" "}
+                  {order.customerName}. This action cannot be undone.
+                </AlertDialogDescription>
+
+                {deleteError && (
+                  <p className="text-sm text-destructive">{deleteError}</p>
+                )}
+              </AlertDialogHeader>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeleting}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="bg-destructive text-white hover:bg-destructive/90 focus-visible:border-destructive/40 focus-visible:ring-destructive/20"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  {isDeleting ? "Deleting…" : "Delete order"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
