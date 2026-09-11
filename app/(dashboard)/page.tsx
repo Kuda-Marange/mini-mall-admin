@@ -6,6 +6,7 @@ import { OrdersOverTimeChart } from "@/components/DashboardComponents/OrdersOver
 import PromotionalBanner from "@/components/DashboardComponents/PromotionalBannar";
 import { StatItem } from "@/components/DashboardComponents/StatItem";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { type Order } from "@/lib/types";
 
 export default function Home() {
@@ -56,11 +57,30 @@ export default function Home() {
   return (
     <div className="space-y-6">
       {/* THE PROMOTIONAL BANNER FOR THE ORDERS PAGE*/}
-      <PromotionalBanner totalOrders={totalOrders} />
+      <PromotionalBanner totalOrders={totalOrders} isLoading={isLoading} />
 
       {/* LOADING / ERROR STATES */}
       {isLoading && (
-        <p className="px-2 text-sm text-muted-foreground">Loading dashboard…</p>
+        <div className="space-y-6">
+          <Card className="border-none shadow-sm h-auto sm:h-30">
+            <div className="flex flex-col sm:flex-row items-stretch divide-y sm:divide-y-0 sm:divide-x divide-border">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex-1 space-y-2 p-4">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-7 w-16" />
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <div className="space-y-3 p-6">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-56" />
+              <Skeleton className="h-40 w-full" />
+            </div>
+          </Card>
+        </div>
       )}
 
       {!isLoading && loadError && (

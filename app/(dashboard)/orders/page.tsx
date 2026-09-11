@@ -12,6 +12,7 @@ import { OrdersGridView } from "@/components/DashboardComponents/OrdersGridView"
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { useSearch } from "@/lib/search-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function OrdersPage() {
   const router = useRouter();
@@ -134,7 +135,24 @@ export default function OrdersPage() {
 
       {/* LOADING / ERROR / EMPTY STATES */}
       {isLoading && (
-        <p className="px-2 text-sm text-muted-foreground">Loading orders…</p>
+        <div className="space-y-2 rounded-lg border border-border p-4">
+          <div className="flex gap-4 pb-2">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 py-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-16 rounded-full" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+          ))}
+        </div>
       )}
 
       {!isLoading && loadError && (

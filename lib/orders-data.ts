@@ -32,3 +32,16 @@ export const orders: Order[] = [
   { id: "ORD-029", customerName: "Nyaradzo Gudo", pizzaName: "Margherita", amountInCents: 899, status: "delivered", orderedAt: "2026-08-21" },
   { id: "ORD-030", customerName: "Onai Machaya", pizzaName: "Pepperoni", amountInCents: 1099, status: "shipped", orderedAt: "2026-08-21" },
 ];
+
+// Single source of truth for the pizza menu, derived from the orders above.
+// Every pizza that appears in an order is available in the create-order form,
+// keeping it in sync with the filter dropdown on the orders page.
+export const PIZZA_OPTIONS: { name: string; priceInCents: number }[] = orders.reduce<{ name: string; priceInCents: number }[]>(
+  (acc, order) => {
+    if (!acc.some((pizza) => pizza.name === order.pizzaName)) {
+      acc.push({ name: order.pizzaName, priceInCents: order.amountInCents });
+    }
+    return acc;
+  },
+  []
+);
