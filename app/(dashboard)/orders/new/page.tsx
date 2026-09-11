@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PIZZA_OPTIONS } from "@/lib/orders-data";
 
 const orderFormSchema = z.object({
   customerName: z
@@ -34,13 +35,6 @@ const orderFormSchema = z.object({
 });
 
 type OrderFormValues = z.infer<typeof orderFormSchema>;
-
-const PIZZA_OPTIONS = [
-  { name: "Margherita", priceInCents: 899 },
-  { name: "Pepperoni", priceInCents: 1099 },
-  { name: "Hawaiian", priceInCents: 999 },
-  { name: "Veggie", priceInCents: 899 },
-];
 
 export default function NewOrderPage() {
   const router = useRouter();

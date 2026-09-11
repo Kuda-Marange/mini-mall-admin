@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -193,7 +194,60 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   };
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading order…</p>;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-32" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+          <div className="space-y-6">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-16 w-16 rounded-lg" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <Skeleton className="h-16 w-full" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="space-y-3 pt-6">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card>
+              <CardContent className="space-y-3 pt-6">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-5 w-full" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <Skeleton className="h-14 w-full" />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (loadError || !order || !status) {
@@ -275,11 +329,15 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             <AlertDialogTrigger asChild>
               <Button
                 variant="destructive"
-                size="icon"
+                disabled={isDeleting}
                 className="group/delete shrink-0"
               >
-                <Trash2 className="h-4 w-4 transition-transform duration-200 ease-out group-hover/delete:-rotate-12 group-active/delete:scale-90" />
-                <span className="sr-only">Delete order</span>
+                {isDeleting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4 transition-transform duration-200 ease-out group-hover/delete:-rotate-12 group-active/delete:scale-90" />
+                )}
+                {isDeleting ? "Deleting…" : "Delete order"}
               </Button>
             </AlertDialogTrigger>
 

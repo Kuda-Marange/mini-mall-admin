@@ -1,14 +1,18 @@
 import { TrendingUp } from "lucide-react";
 import Link from "next/link";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 interface PromotionalBannerProps {
   totalOrders?: number;
   userName?: string;
+  isLoading?: boolean;
 }
 
 export default function PromotionalBanner({
   totalOrders = 0,
   userName = "Kudakwashe",
+  isLoading = false,
 }: PromotionalBannerProps) {
   return (
     <div className="relative overflow-hidden rounded-2xl bg-sidebar text-sidebar-foreground">
@@ -21,10 +25,15 @@ export default function PromotionalBanner({
           <h2 className="text-2xl font-bold font-heading tracking-tight sm:text-3xl">
             Welcome back, {userName}!
           </h2>
-          <p className="mt-2 max-w-md text-sm text-sidebar-foreground/70 sm:text-base">
-            Your pizzeria has served {totalOrders} orders so far. The ovens are
-            warm.
-          </p>
+
+          {isLoading ? (
+            <Skeleton className="mt-2 h-5 w-64 bg-sidebar-foreground/10" />
+          ) : (
+            <p className="mt-2 max-w-md text-sm text-sidebar-foreground/70 sm:text-base">
+              Your pizzeria has served {totalOrders} orders so far. The ovens are
+              warm.
+            </p>
+          )}
         </div>
 
         <Link
