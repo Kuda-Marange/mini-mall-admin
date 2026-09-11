@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { type Order } from "@/lib/types";
 import { formatPrice } from "@/lib/format-price";
+import { getPizzaImage } from "@/lib/pizza-images";
 import { Badge } from "../ui/badge";
 
 const STATUS_LABELS: Record<Order["status"], string> = {
@@ -25,7 +26,7 @@ export const columns: ColumnDef<Order>[] = [
     header: "",
     cell: ({ row }) => (
       <img
-        src="/pizza.jpg"
+        src={getPizzaImage(row.original.pizzaName)}
         alt={row.original.pizzaName}
         className="h-9 w-9 rounded-full object-cover"
       />

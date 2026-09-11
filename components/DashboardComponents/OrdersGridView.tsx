@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { type Order } from "@/lib/types";
 import { formatPrice } from "@/lib/format-price";
+import { getPizzaImage } from "@/lib/pizza-images";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Clock, Truck, Check, X } from "lucide-react";
@@ -48,7 +49,7 @@ export function OrdersGridView({ orders, onOrderClick }: OrdersGridViewProps) {
             >
               <div className="flex items-start justify-between gap-2">
                 <img
-                  src="/pizza.jpg"
+                  src={getPizzaImage(order.pizzaName)}
                   alt={order.pizzaName}
                   className="h-10 w-10 shrink-0 rounded-full object-cover"
                 />
