@@ -17,7 +17,7 @@ export default async function DashboardLayout({
 
   return (
     <SearchProvider>
-      <SidebarProvider defaultOpen={defaultOpen} className="h-screen">
+      <SidebarProvider defaultOpen={defaultOpen} className="h-dvh">
         <AppSidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Navbar
