@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, X } from "lucide-react";
 
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 
 interface ToastPayload {
   title: string;
