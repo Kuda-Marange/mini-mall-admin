@@ -1,11 +1,10 @@
 "use client";
 
-import { use, useState } from "react";
-import { notFound, useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Clock, Package, Truck, X } from "lucide-react";
 
-import { orders } from "@/lib/orders-data";
-import { type OrderStatus } from "@/lib/types";
+import { type Order, type OrderStatus } from "@/lib/types";
 import { formatPrice } from "@/lib/format-price";
 
 import { Badge } from "@/components/ui/badge";
@@ -66,40 +65,91 @@ function StatusIconDisplay({
   }
 }
 
-// A plain, standalone function — NOT part of any component's render logic.
-// It does its own independent lookup into the shared `orders` array and
-// mutates it there, entirely separate from whatever a component computed
-// for its own render (that separation is what keeps React Compiler happy —
-// mutating a variable derived during render is what it warns against, not
-// a side effect like this happening outside render at all).
-function updateOrderStatus(orderId: string, newStatus: OrderStatus) {
-  const order = orders.find((o) => o.id === orderId);
-  if (order) {
-    order.status = newStatus;
-  }
-}
-
 export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const router = useRouter();
   const { id } = use(params);
 
-  const foundOrder = orders.find((order) => order.id === id);
+  const [order, setOrder] = useState<Order | null>(null);
+  const [status, setStatus] = useState<OrderStatus | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  if (!foundOrder) {
-    notFound();
+  // Fetches the order from the API route on mount / whenever `id` changes.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadOrder() {
+      setIsLoading(true);
+      setLoadError(null);
+
+      try {
+        const response = await fetch(`/api/orders/${id}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          if (!cancelled) setLoadError(result.error ?? "Order not found.");
+          return;
+        }
+
+        if (!cancelled) {
+          setOrder(result as Order);
+          setStatus((result as Order).status);
+        }
+      } catch (err) {
+        console.error("Failed to load order:", err);
+        if (!cancelled) setLoadError("Something went wrong loading this order.");
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadOrder();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  // Updates the status optimistically, then PATCHes the API route.
+  // Reverts if the request fails.
+  const handleStatusChange = async (newStatus: OrderStatus) => {
+    if (!order) return;
+
+    const previousStatus = status;
+    setStatus(newStatus);
+
+    try {
+      const response = await fetch(`/api/orders/${order.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        setStatus(previousStatus);
+      }
+    } catch (err) {
+      console.error("Failed to update order status:", err);
+      setStatus(previousStatus);
+    }
+  };
+
+  if (isLoading) {
+    return <p className="text-sm text-muted-foreground">Loading order…</p>;
   }
 
-  const [status, setStatus] = useState<OrderStatus>(foundOrder.status);
-
-  // Updates this page's own display immediately, AND updates the shared
-  // `orders` array (via the standalone function above) so /orders and the
-  // stats bar reflect the change too — until the dev server restarts or
-  // the page is refreshed, since there's no real backend behind this
-  // fixture data.
-  const handleStatusChange = (newStatus: OrderStatus) => {
-    setStatus(newStatus);
-    updateOrderStatus(foundOrder.id, newStatus);
-  };
+  if (loadError || !order || !status) {
+    return (
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" onClick={() => router.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to orders
+        </Button>
+        <p className="text-sm text-muted-foreground">
+          {loadError ?? "Order not found."}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -121,7 +171,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-semibold font-heading tracking-tight">
-                {foundOrder.id}
+                {order.id}
               </h1>
 
               <Badge
@@ -134,7 +184,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             </div>
 
             <p className="mt-1 text-sm text-muted-foreground">
-              Order placed {foundOrder.orderedAt}
+              Order placed {order.orderedAt}
             </p>
           </div>
         </div>
@@ -181,7 +231,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                   </div>
 
                   <div>
-                    <p className="font-medium">{foundOrder.pizzaName}</p>
+                    <p className="font-medium">{order.pizzaName}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Pizza order
                     </p>
@@ -189,7 +239,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                 </div>
 
                 <p className="font-medium">
-                  {formatPrice(foundOrder.amountInCents)}
+                  {formatPrice(order.amountInCents)}
                 </p>
               </div>
             </CardContent>
@@ -214,11 +264,11 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
             <CardContent>
               <div className="space-y-4">
-                <DetailRow label="Customer name" value={foundOrder.customerName} />
+                <DetailRow label="Customer name" value={order.customerName} />
                 <Separator />
-                <DetailRow label="Order ID" value={foundOrder.id} />
+                <DetailRow label="Order ID" value={order.id} />
                 <Separator />
-                <DetailRow label="Ordered" value={foundOrder.orderedAt} />
+                <DetailRow label="Ordered" value={order.orderedAt} />
               </div>
             </CardContent>
           </Card>
@@ -236,13 +286,13 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
             <CardContent>
               <div className="space-y-4">
-                <SummaryRow label="Subtotal" value={formatPrice(foundOrder.amountInCents)} />
+                <SummaryRow label="Subtotal" value={formatPrice(order.amountInCents)} />
                 <SummaryRow label="Discount" value={formatPrice(0)} />
                 <Separator />
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Total</span>
                   <span className="text-lg font-semibold">
-                    {formatPrice(foundOrder.amountInCents)}
+                    {formatPrice(order.amountInCents)}
                   </span>
                 </div>
               </div>

@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Bell, Search } from "lucide-react"
-import { Input } from "./ui/input"
+ import { Bell, Search } from "lucide-react"
+// import { Input } from "./ui/input"
 import { Button } from "./ui/button"
 import { SidebarTrigger } from "./ui/sidebar"
 import {
@@ -38,7 +38,7 @@ export function Navbar({
   notificationCount = 0,
   onLogout,
 }: NavbarProps) {
-  const { search, setSearch } = useSearch()
+  // const { search, setSearch } = useSearch()
   const initials = userName
     .split(" ")
     .map((n) => n[0])
@@ -57,14 +57,14 @@ export function Navbar({
       ) : null}
 
       <div className="relative flex-1 max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        {/* <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
           placeholder="Search..."
           className="pl-9"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-        />
+        /> */}
       </div>
 
       

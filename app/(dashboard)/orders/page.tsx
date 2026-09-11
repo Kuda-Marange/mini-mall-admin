@@ -1,11 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { OrdersActionBar } from "@/components/DashboardComponents/OrdersActionBar";
 import { OrderSearchFilterBar } from "@/components/DashboardComponents/OrderSearchFilterBar";
 import { OrderStatusFilter } from "@/components/DashboardComponents/OrderStatusFilter";
-import { orders } from "@/lib/orders-data";
-import { OrderStatus } from "@/lib/types";
-import { useState } from "react";
+import { type Order, type OrderStatus } from "@/lib/types";
 import { columns } from "@/components/DashboardComponents/columns";
 import { OrdersDataTable } from "@/components/DashboardComponents/OrdersDataTable";
 import { OrdersGridView } from "@/components/DashboardComponents/OrdersGridView";
@@ -17,11 +17,48 @@ export default function OrdersPage() {
   const router = useRouter();
   const { search, setSearch } = useSearch();
 
+  // Fetched order data
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   // For search
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
   const [view, setView] = useState<"grid" | "list">("list");
   const [pizzaFilter, setPizzaFilter] = useState<string>("all");
   const [filterOpen, setFilterOpen] = useState(false);
+
+  // Fetches all orders from the API route on mount.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadOrders() {
+      setIsLoading(true);
+      setLoadError(null);
+
+      try {
+        const response = await fetch("/api/orders");
+        const result = await response.json();
+
+        if (!response.ok) {
+          if (!cancelled) setLoadError(result.error ?? "Failed to load orders.");
+          return;
+        }
+
+        if (!cancelled) setOrders(result as Order[]);
+      } catch (err) {
+        console.error("Failed to load orders:", err);
+        if (!cancelled) setLoadError("Something went wrong loading orders.");
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadOrders();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Unique pizza names for the filter dropdown
   const pizzaNames = orders
@@ -95,11 +132,26 @@ export default function OrdersPage() {
         )}
       </div>
 
+      {/* LOADING / ERROR / EMPTY STATES */}
+      {isLoading && (
+        <p className="px-2 text-sm text-muted-foreground">Loading orders…</p>
+      )}
+
+      {!isLoading && loadError && (
+        <p className="px-2 text-sm text-destructive">{loadError}</p>
+      )}
+
+      {!isLoading && !loadError && filteredOrders.length === 0 && (
+        <p className="px-2 text-sm text-muted-foreground">No orders found.</p>
+      )}
+
       {/* TABLE OR GRID TO FILTER ORDERS*/}
-      {view === "list" ? (
-        <OrdersDataTable columns={columns} data={filteredOrders} onRowClick={(order) => router.push(`/orders/${order.id}`)} />
-      ) : (
-        <OrdersGridView orders={filteredOrders} onOrderClick={(order) => router.push(`/orders/${order.id}`)} />
+      {!isLoading && !loadError && filteredOrders.length > 0 && (
+        view === "list" ? (
+          <OrdersDataTable columns={columns} data={filteredOrders} onRowClick={(order) => router.push(`/orders/${order.id}`)} />
+        ) : (
+          <OrdersGridView orders={filteredOrders} onOrderClick={(order) => router.push(`/orders/${order.id}`)} />
+        )
       )}
     </div>
   );

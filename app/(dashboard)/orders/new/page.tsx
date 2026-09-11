@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,9 +25,6 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { orders } from "@/lib/orders-data";
-import { type Order } from "@/lib/types";
-
 const orderFormSchema = z.object({
   customerName: z
     .string()
@@ -44,18 +42,10 @@ const PIZZA_OPTIONS = [
   { name: "Veggie", priceInCents: 899 },
 ];
 
-/** Finds the highest existing "ORD-XXX" number and returns the next one, e.g. "ORD-031". */
-function getNextOrderId(): string {
-  const lastNumber =
-    orders.length > 0
-      ? Math.max(...orders.map((o) => parseInt(o.id.replace("ORD-", ""), 10)))
-      : 0;
-  const nextNumber = lastNumber + 1;
-  return `ORD-${String(nextNumber).padStart(3, "0")}`;
-}
-
 export default function NewOrderPage() {
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderFormSchema),
@@ -66,28 +56,40 @@ export default function NewOrderPage() {
     },
   });
 
-  function onSubmit(values: OrderFormValues) {
+  async function onSubmit(values: OrderFormValues) {
     const selectedPizza = PIZZA_OPTIONS.find(
       (p) => p.name === values.pizzaName
     );
     const amountInCents = (selectedPizza?.priceInCents ?? 0) * values.quantity;
 
-    const newOrder: Order = {
-      id: getNextOrderId(),
-      customerName: values.customerName,
-      pizzaName: values.pizzaName,
-      amountInCents,
-      status: "pending",
-      orderedAt: new Date().toISOString().split("T")[0],
-    };
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-    // Mutates the shared, imported `orders` array directly — every other
-    // page importing `orders` sees this new entry too, until the dev
-    // server restarts or the page is refreshed (no real backend/database
-    // behind this fixture data — see project notes on that limitation).
-    orders.push(newOrder);
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: values.customerName,
+          pizzaName: values.pizzaName,
+          amountInCents,
+        }),
+      });
 
-    router.push("/orders");
+      const result = await response.json();
+
+      if (!response.ok) {
+        setSubmitError(result.error ?? "Failed to create order.");
+        return;
+      }
+
+      router.push("/orders");
+    } catch (err) {
+      console.error("Failed to create order:", err);
+      setSubmitError("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -168,8 +170,12 @@ export default function NewOrderPage() {
                   )}
                 />
 
-                <Button type="submit" className="w-full">
-                  Create Order
+                {submitError && (
+                  <p className="text-sm text-destructive">{submitError}</p>
+                )}
+
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? "Creating…" : "Create Order"}
                 </Button>
               </form>
             </Form>

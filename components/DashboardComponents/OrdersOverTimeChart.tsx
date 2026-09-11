@@ -14,39 +14,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "../ui/chart";
-import { orders } from "@/lib/orders-data";
-
-// group orders by date, count how many per day
-const ordersByDate = orders.reduce<Record<string, number>>((acc, order) => {
-  acc[order.orderedAt] = (acc[order.orderedAt] || 0) + 1;
-  return acc;
-}, {});
-
-// convert into the array shape Recharts expects, sorted chronologically
-const chartData = Object.entries(ordersByDate)
-  .map(([date, count]) => ({ date, orders: count }))
-  .sort((a, b) => a.date.localeCompare(b.date));
-
-// simple trend: compare the average of the first half of days vs the second half
-const totalOrders = chartData.reduce((sum, d) => sum + d.orders, 0);
-const midpoint = Math.floor(chartData.length / 2);
-const firstHalf = chartData.slice(0, midpoint);
-const secondHalf = chartData.slice(midpoint);
-const firstHalfAvg =
-  firstHalf.reduce((sum, d) => sum + d.orders, 0) / (firstHalf.length || 1);
-const secondHalfAvg =
-  secondHalf.reduce((sum, d) => sum + d.orders, 0) / (secondHalf.length || 1);
-const trendPercent =
-  firstHalfAvg === 0 ? 0 : ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100;
-const isTrendingUp = trendPercent >= 0;
-
-const formatShortDate = (value: string) =>
-  new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-
-const dateRange =
-  chartData.length > 0
-    ? `${formatShortDate(chartData[0].date)} – ${formatShortDate(chartData[chartData.length - 1].date)}`
-    : "";
+import { type Order } from "@/lib/types";
 
 const chartConfig = {
   orders: {
@@ -55,7 +23,43 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function OrdersOverTimeChart() {
+const formatShortDate = (value: string) =>
+  new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+interface OrdersOverTimeChartProps {
+  orders: Order[];
+}
+
+export function OrdersOverTimeChart({ orders }: OrdersOverTimeChartProps) {
+  // group orders by date, count how many per day
+  const ordersByDate = orders.reduce<Record<string, number>>((acc, order) => {
+    acc[order.orderedAt] = (acc[order.orderedAt] || 0) + 1;
+    return acc;
+  }, {});
+
+  // convert into the array shape Recharts expects, sorted chronologically
+  const chartData = Object.entries(ordersByDate)
+    .map(([date, count]) => ({ date, orders: count }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  // simple trend: compare the average of the first half of days vs the second half
+  const totalOrders = chartData.reduce((sum, d) => sum + d.orders, 0);
+  const midpoint = Math.floor(chartData.length / 2);
+  const firstHalf = chartData.slice(0, midpoint);
+  const secondHalf = chartData.slice(midpoint);
+  const firstHalfAvg =
+    firstHalf.reduce((sum, d) => sum + d.orders, 0) / (firstHalf.length || 1);
+  const secondHalfAvg =
+    secondHalf.reduce((sum, d) => sum + d.orders, 0) / (secondHalf.length || 1);
+  const trendPercent =
+    firstHalfAvg === 0 ? 0 : ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100;
+  const isTrendingUp = trendPercent >= 0;
+
+  const dateRange =
+    chartData.length > 0
+      ? `${formatShortDate(chartData[0].date)} – ${formatShortDate(chartData[chartData.length - 1].date)}`
+      : "";
+
   return (
     <Card>
       <CardHeader className="pb-2">
