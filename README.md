@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mini Mall Admin
 
-## Getting Started
+A merchant order dashboard built as part of a Lioncap Ventures developer
+onboarding ramp. Merchants can view, filter, and search their orders,
+update an order's status, and create new orders.
 
-First, run the development server:
+Live: https://mini-mall-admin.vercel.app
+
+## Stack
+
+- Next.js (App Router) + TypeScript (strict)
+- Tailwind CSS + shadcn/ui (Radix UI primitives)
+- TanStack Table (sorting, pagination)
+- react-hook-form + zod (form validation)
+- Recharts (dashboard chart)
+- next-themes (dark mode)
+
+## Getting started
+
+This project uses **pnpm only**. Do not use npm, yarn, or bun — a
+stray lockfile from another package manager will break the build.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+To build for production:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm build
+```
 
-## Learn More
+## Data
 
-To learn more about Next.js, take a look at the following resources:
+Order data currently lives in an in-memory fixture file
+(`lib/orders-data.ts`), not a persisted database.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+An earlier version of this project connected to Supabase for real
+persistence. That was reverted: the RLS policies in place allowed
+writes and deletes using the public anon/publishable key, meaning
+anyone with the deployed URL could modify or wipe the orders table.
+Rather than ship that, the project reverted to mock data until proper
+authentication exists to scope the RLS policies to an authenticated
+user instead of allowing all writes unconditionally.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Practical effect: creating an order or changing an order's status
+updates the shared in-memory array for the current server process,
+visible across pages during that session, but resets on redeploy or
+server restart.
 
-## Deploy on Vercel
+## Routes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Route | What it does |
+|---|---|
+| `/` | Dashboard home: stat cards, orders-over-time chart |
+| `/orders` | Filterable, sortable, paginated orders table |
+| `/orders/[id]` | Order detail, with an editable status |
+| `/orders/new` | Create-order form (react-hook-form + zod validation) |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Git workflow
+
+See `CLAUDE.md` for the full set of rules this repo follows
+(branching, commit style, build-before-PR, etc.) — the same rules
+apply whether you're a person or an AI assistant working in this repo.
+
+## Known limitations / next steps
+
+- No real backend persistence (see "Data" above) — reintroduce
+  Supabase once real auth exists to scope RLS policies correctly
+- No authentication yet — the dashboard is currently open to anyone
+  who has the URL
+- No public storefront yet (product list, cart, checkout) — planned
+- No automated tests yet (a Playwright test covering order creation
+  is planned)
+- No Dockerfile yet (planned: build the app and serve it on port 8080)
