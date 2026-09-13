@@ -17,7 +17,6 @@ const PUBLIC_PATHS = [
   "/checkout",
 ];
 
-
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -49,7 +48,16 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isPublicPath = PUBLIC_PATHS.some((p) => path.startsWith(p));
+
+  // Guest checkout creates an order via POST /api/orders — must stay
+  // login-free. GET (list) and everything under /api/orders/[id] (detail,
+  // status update, delete) stay admin-only, so this checks the exact base
+  // path AND the method, not a startsWith match like the rest of the list.
+  const isGuestOrderCreation =
+    path === "/api/orders" && request.method === "POST";
+
+  const isPublicPath =
+    isGuestOrderCreation || PUBLIC_PATHS.some((p) => path.startsWith(p));
 
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
