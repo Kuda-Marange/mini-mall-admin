@@ -26,21 +26,15 @@ export default async function DashboardLayout({
 
   return (
     <SearchProvider>
-      <SidebarProvider defaultOpen={defaultOpen} className="h-dvh">
-        <AppSidebar />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <Navbar
-            userName={userName}
-            userEmail={userEmail}
-            userImageUrl="https://github.com/shadcn.png"
-            notificationCount={4}
-          />
-          <main className="flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar">
-            {children}
-          </main>
-        </div>
-        <Toaster />
-      </SidebarProvider>
+      <SidebarProvider defaultOpen={defaultOpen}>
+  <div className="flex h-screen w-full overflow-hidden">
+    <AppSidebar />
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <Navbar userName="Kudakwashe Marange" notificationCount={4} />
+      <main className="flex-1 overflow-y-auto p-6">{children}</main>
+    </div>
+  </div>
+</SidebarProvider>
     </SearchProvider>
   );
 }

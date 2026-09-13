@@ -11,7 +11,12 @@ const PUBLIC_PATHS = [
   "/forgot-password",
   "/reset-password",
   "/auth/callback",
+  "/shop",
+  "/product",
+  "/cart",
+  "/checkout",
 ];
+
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
