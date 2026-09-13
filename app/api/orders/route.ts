@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { mapOrderRow, type OrderRow } from "@/lib/order-mapper";
 
 export async function GET() {
+  const supabase = await createClient();
+
   try {
     const { data, error } = await supabase
       .from("orders")
@@ -23,6 +25,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const supabase = await createClient();
+
   try {
     const body = await request.json();
     const { customerName, pizzaName, amountInCents, status, orderedAt } = body;

@@ -1,15 +1,14 @@
 "use client"
 
 import * as React from "react"
- import { Bell, Search } from "lucide-react"
-// import { Input } from "./ui/input"
+import { Bell } from "lucide-react"
 import { Button } from "./ui/button"
 import { SidebarTrigger } from "./ui/sidebar"
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from  "./ui/avatar"
+} from "./ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +18,8 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
 import { ThemeToggle } from "./theme-toggle-button"
-import { useSearch } from "@/lib/search-context"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 
 interface NavbarProps {
   title?: string
@@ -27,24 +27,30 @@ interface NavbarProps {
   userEmail?: string
   userImageUrl?: string
   notificationCount?: number
-  onLogout?: () => void
 }
 
 export function Navbar({
   title,
-  userName = "Kudakwashe Marange",
+  userName = "Admin",
   userEmail,
   userImageUrl,
   notificationCount = 0,
-  onLogout,
 }: NavbarProps) {
-  // const { search, setSearch } = useSearch()
+  const router = useRouter()
+
   const initials = userName
     .split(" ")
     .map((n) => n[0])
     .slice(0, 2)
     .join("")
     .toUpperCase()
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push("/login")
+    router.refresh()
+  }
 
   return (
     <header className="flex h-16 items-center gap-4 border-b border-border bg-background px-6">
@@ -56,18 +62,7 @@ export function Navbar({
         </h1>
       ) : null}
 
-      <div className="relative flex-1 max-w-md">
-        {/* <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search..."
-          className="pl-9"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        /> */}
-      </div>
-
-      
+      <div className="relative flex-1 max-w-md" />
 
       <div className="ml-auto flex items-center gap-3">
         <ThemeToggle />
@@ -111,7 +106,7 @@ export function Navbar({
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onLogout}>Log out</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSignOut}>Log out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

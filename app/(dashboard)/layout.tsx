@@ -4,6 +4,7 @@ import { AppSidebar } from "../../components/app-sidebar";
 import { Navbar } from "../../components/navbar";
 import { SearchProvider } from "../../lib/search-context";
 import { Toaster } from "../../components/ui/toast";
+import { createClient } from "../../lib/supabase/server";
 
 export default async function DashboardLayout({
   children,
@@ -15,13 +16,22 @@ export default async function DashboardLayout({
   const defaultOpen =
     sidebarState === undefined ? true : sidebarState === "true";
 
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const userName = user?.user_metadata?.full_name ?? user?.email ?? "Admin";
+  const userEmail = user?.email;
+
   return (
     <SearchProvider>
       <SidebarProvider defaultOpen={defaultOpen} className="h-dvh">
         <AppSidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Navbar
-            userName="Kudakwashe Marange"
+            userName={userName}
+            userEmail={userEmail}
             userImageUrl="https://github.com/shadcn.png"
             notificationCount={4}
           />
