@@ -3,6 +3,7 @@ import "./globals.css";
 import { Geist, Syne } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "next-themes";
+import { CartProvider } from "@/lib/cart-context";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -34,17 +35,17 @@ export default function RootLayout({
       )}
       suppressHydrationWarning
     >
-      <body
-        className={cn(
-          "bg-background text-foreground antialiased h-dvh overflow-hidden"
-        )}
-      >
+    
+        <body className={cn("bg-background text-foreground antialiased")}>
+      
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
         >
+          <CartProvider>
           {children}
+          </CartProvider>
         </ThemeProvider>
       </body>
     </html>

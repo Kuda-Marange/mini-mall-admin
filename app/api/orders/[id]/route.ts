@@ -13,7 +13,7 @@ export async function GET(
   try {
     const { data, error } = await supabase
       .from("orders")
-      .select("*")
+      .select("*, order_items(*)")   // ← only this line changed, was .select("*")
       .eq("id", id)
       .single();
 
