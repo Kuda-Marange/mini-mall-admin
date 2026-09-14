@@ -46,7 +46,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 
   return (
     <div className="max-w-4xl mx-auto p-6 grid gap-8 sm:grid-cols-2">
-      <div className="relative aspect-square rounded-lg overflow-hidden">
+      <div className="relative aspect-square rounded-full overflow-hidden max-w-sm mx-auto sm:mx-0">
         <Image
           src={product.image}
           alt={product.name}

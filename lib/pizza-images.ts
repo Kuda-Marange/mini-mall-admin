@@ -1,11 +1,11 @@
 const PIZZA_IMAGES: Record<string, string> = {
-  Margherita: "/margherita.jpg",
-  Pepperoni: "/pepperoni.jpg",
+  Margherita: "/margherita.png",
+  Pepperoni: "/pepperoni.png",
   Hawaiian: "/hawaiian.png",
-  Veggie: "/veggie.jpg",
-  "Chicken Supreme": "/chicken-supreme.jpg",
-  "Spicy Sausage": "/spicy-sausage.jpg",
-  Lasagna: "/lasagna.jpg",
+  Veggie: "/veggie.png",
+  "Chicken Supreme": "/chicken-supreme.png",
+  "Spicy Sausage": "/spicy-sausage.png",
+  Lasagna: "/lasagna.png",
 };
 
 /** Fallback image shown for any pizza name that isn't in PIZZA_IMAGES. */
