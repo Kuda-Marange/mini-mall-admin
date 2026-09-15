@@ -23,8 +23,6 @@ type NavLink =
 const NAV_LINKS: NavLink[] = [
   { title: "Home", type: "link", href: "/shop" },
   { title: "Menu", type: "link", href: "/shop/menu" },
-  { title: "About", type: "scroll", id: "about-us" },
-  { title: "Cart", type: "link", href: "/cart" },
   { title: "Checkout", type: "link", href: "/checkout" },
 ];
 
