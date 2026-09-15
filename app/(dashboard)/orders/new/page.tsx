@@ -51,40 +51,44 @@ export default function NewOrderPage() {
   });
 
   async function onSubmit(values: OrderFormValues) {
-    const selectedPizza = PIZZA_OPTIONS.find(
-      (p) => p.name === values.pizzaName
-    );
-    const amountInCents = (selectedPizza?.priceInCents ?? 0) * values.quantity;
+  const selectedPizza = PIZZA_OPTIONS.find(
+    (p) => p.name === values.pizzaName
+  );
 
-    setIsSubmitting(true);
-    setSubmitError(null);
+  setIsSubmitting(true);
+  setSubmitError(null);
 
-    try {
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerName: values.customerName,
-          pizzaName: values.pizzaName,
-          amountInCents,
-        }),
-      });
+  try {
+    const response = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerName: values.customerName,
+        items: [
+          {
+            productName: values.pizzaName,
+            quantity: values.quantity,
+            priceInCents: selectedPizza?.priceInCents ?? 0,
+          },
+        ],
+      }),
+    });
 
-      const result = await response.json();
+    const result = await response.json();
 
-      if (!response.ok) {
-        setSubmitError(result.error ?? "Failed to create order.");
-        return;
-      }
-
-      router.push("/orders");
-    } catch (err) {
-      console.error("Failed to create order:", err);
-      setSubmitError("Something went wrong. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+    if (!response.ok) {
+      setSubmitError(result.error ?? "Failed to create order.");
+      return;
     }
+
+    router.push("/orders");
+  } catch (err) {
+    console.error("Failed to create order:", err);
+    setSubmitError("Something went wrong. Please try again.");
+  } finally {
+    setIsSubmitting(false);
   }
+}
 
   return (
     <div className="space-y-6">
