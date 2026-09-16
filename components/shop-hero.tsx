@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRightIcon } from "lucide-react";
 import Autoplay from "embla-carousel-autoplay";
 
@@ -102,9 +103,11 @@ export function ShopHero({ menudata }: { menudata: MenuData[] }) {
                   key={item.id}
                   className="flex w-full items-center justify-center"
                 >
-                  <img
+                  <Image
                     src={item.img}
                     alt={item.imgAlt}
+                    width={288}
+                    height={288}
                     className="size-56 object-contain sm:size-64 lg:size-72"
                   />
                 </CarouselItem>
@@ -150,7 +153,13 @@ export function ShopHero({ menudata }: { menudata: MenuData[] }) {
                         />
                       </svg>
                     </div>
-                    <img src={item.img} alt={item.imgAlt} className="size-16" />
+                    <Image
+                      src={item.img}
+                      alt={item.imgAlt}
+                      width={64}
+                      height={64}
+                      className="size-16 object-contain"
+                    />
                   </div>
                 </CarouselItem>
               ))}
