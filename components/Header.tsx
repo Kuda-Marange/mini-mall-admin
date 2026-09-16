@@ -23,8 +23,6 @@ type NavLink =
 const NAV_LINKS: NavLink[] = [
   { title: "Home", type: "link", href: "/shop" },
   { title: "Menu", type: "link", href: "/shop/menu" },
-  { title: "About", type: "scroll", id: "about-us" },
-  { title: "Cart", type: "link", href: "/cart" },
   { title: "Checkout", type: "link", href: "/checkout" },
 ];
 
@@ -66,9 +64,12 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
       <div className="max-w-4xl mx-auto flex h-16 items-center justify-between gap-4 px-4">
-        <Link href="/shop" className="shrink-0 font-bold text-lg text-foreground">
-          Mini Mall Pizza
-        </Link>
+        <Link href="/shop" className="shrink-0 flex items-center gap-2">
+  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-background">
+    <span className="text-xs font-bold">M</span>
+  </div>
+  <span className="font-bold text-sm text-foreground">Mini Mall Pizza</span>
+</Link>
         
 
         <nav className="hidden sm:flex items-center gap-1">

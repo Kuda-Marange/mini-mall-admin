@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRightIcon } from "lucide-react";
 import Autoplay from "embla-carousel-autoplay";
 
@@ -82,7 +83,7 @@ export function ShopHero({ menudata }: { menudata: MenuData[] }) {
                 size="lg"
                 className="group relative w-fit overflow-hidden rounded-full text-base before:absolute before:inset-0 before:rounded-[inherit] before:bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.5)_50%,transparent_75%,transparent_100%)] before:bg-[length:250%_250%,100%_100%] before:bg-[position:200%_0,0_0] before:bg-no-repeat before:transition-[background-position_0s_ease] before:duration-1000 hover:before:bg-[position:-100%_0,0_0] has-[>svg]:px-6 dark:before:bg-[linear-gradient(45deg,transparent_25%,rgba(0,0,0,0.2)_50%,transparent_75%,transparent_100%)]"
               >
-                <Link href="#menu">
+                <Link href="/shop/menu">
                   View menu
                   <ArrowRightIcon className="transition-transform duration-200 group-hover:translate-x-0.5" />
                 </Link>
@@ -102,9 +103,11 @@ export function ShopHero({ menudata }: { menudata: MenuData[] }) {
                   key={item.id}
                   className="flex w-full items-center justify-center"
                 >
-                  <img
+                  <Image
                     src={item.img}
                     alt={item.imgAlt}
+                    width={288}
+                    height={288}
                     className="size-56 object-contain sm:size-64 lg:size-72"
                   />
                 </CarouselItem>
@@ -150,7 +153,13 @@ export function ShopHero({ menudata }: { menudata: MenuData[] }) {
                         />
                       </svg>
                     </div>
-                    <img src={item.img} alt={item.imgAlt} className="size-16" />
+                    <Image
+                      src={item.img}
+                      alt={item.imgAlt}
+                      width={64}
+                      height={64}
+                      className="size-16 object-contain"
+                    />
                   </div>
                 </CarouselItem>
               ))}
