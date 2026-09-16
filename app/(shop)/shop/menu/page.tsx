@@ -1,5 +1,6 @@
 import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,11 +37,15 @@ export default function MenuPage() {
               key={product.name}
             >
               <CardContent className="px-0">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="aspect-square w-full object-cover"
-                />
+                <div className="relative aspect-square w-full overflow-hidden">
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover"
+                  />
+                </div>
               </CardContent>
               <CardHeader className="mb-2 gap-3">
                 <CardTitle className="text-xl font-semibold">
