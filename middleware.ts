@@ -59,6 +59,14 @@ export async function middleware(request: NextRequest) {
   const isPublicPath =
     isGuestOrderCreation || PUBLIC_PATHS.some((p) => path.startsWith(p));
 
+  // Unauthenticated visitors to root land on the public shop, not the
+  // admin login. Exact-match only, so this doesn't affect any other route.
+  if (!user && path === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/shop";
+    return NextResponse.redirect(url);
+  }
+
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
