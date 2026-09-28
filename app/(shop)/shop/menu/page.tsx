@@ -1,82 +1,25 @@
-import { ArrowRightIcon } from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardTitle,
-  CardDescription,
-  CardHeader,
-} from "@/components/ui/card";
-import { formatPrice } from "@/lib/format-price";
+import { ProductCard } from "@/components/product-card";
+import { Reveal } from "@/components/reveal";
 import { PRODUCTS } from "@/lib/products";
 
 export default function MenuPage() {
   return (
-    <section className="py-8 sm:py-16 lg:py-24">
+    <section className="py-10 sm:py-14 lg:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto mb-12 flex max-w-2xl flex-col items-center justify-center space-y-4 text-center sm:mb-16 lg:mb-24">
-          <Badge variant="outline" className="h-auto text-sm font-normal">
-            Full Menu
-          </Badge>
-          <h1 className="text-2xl font-semibold font-heading md:text-3xl lg:text-4xl">
+        <div className="mb-10 max-w-2xl">
+          <h1 className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
             Everything we make
           </h1>
-          <p className="text-muted-foreground text-xl">
+          <p className="mt-3 text-lg text-muted-foreground">
             All {PRODUCTS.length} pizzas, made fresh to order.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Reveal className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {PRODUCTS.map((product) => (
-            <Card
-              className="hover:border-primary border-primary/10 rounded-none border pt-0 shadow-none ring-0 transition-colors duration-300"
-              key={product.name}
-            >
-              <CardContent className="px-0">
-                <div className="relative aspect-square w-full overflow-hidden">
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover"
-                  />
-                </div>
-              </CardContent>
-              <CardHeader className="mb-2 gap-3">
-                <CardTitle className="text-xl font-semibold">
-                  <Link href={`/shop/${encodeURIComponent(product.name)}`}>
-                    {product.name}
-                  </Link>
-                </CardTitle>
-                <CardDescription className="text-base">
-                  {product.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <span className="text-primary font-semibold">
-                    {formatPrice(product.priceInCents)}
-                  </span>
-                  <Button
-                    className="group bg-primary/10 hover:bg-primary/20 text-primary rounded-full text-sm has-[>svg]:px-6"
-                    size="lg"
-                    asChild
-                  >
-                    <Link href={`/shop/${encodeURIComponent(product.name)}`}>
-                      View
-                      <ArrowRightIcon className="transition-transform duration-200 group-hover:translate-x-0.5" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <ProductCard key={product.name} product={product} />
           ))}
-        </div>
+        </Reveal>
       </div>
     </section>
   );

@@ -32,6 +32,23 @@ export function Header() {
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [scrolled, setScrolled] = useState(false);
+
+  // On the shop home page the header is see-through until the visitor scrolls,
+  // so the hero background runs all the way to the top of the window.
+  const overHero = pathname === "/shop" && !scrolled;
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+
+    const frame = requestAnimationFrame(onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -62,15 +79,23 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
+    <header
+      className={cn(
+        "sticky top-0 z-50 border-b transition-[background-color,border-color,backdrop-filter] duration-300",
+        overHero
+          ? "border-transparent bg-transparent"
+          : "bg-background/95 backdrop-blur"
+      )}
+    >
       <div className="max-w-4xl mx-auto flex h-16 items-center justify-between gap-4 px-4">
         <Link href="/shop" className="shrink-0 flex items-center gap-2">
-  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-background">
-    <span className="text-xs font-bold">M</span>
-  </div>
-  <span className="font-bold text-sm text-foreground">Mini Mall Pizza</span>
-</Link>
-        
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-background">
+            <span className="text-xs font-bold">M</span>
+          </div>
+          <span className="font-bold text-sm text-foreground">
+            Mini Mall Pizza
+          </span>
+        </Link>
 
         <nav className="hidden sm:flex items-center gap-1">
           {NAV_LINKS.map((link) =>

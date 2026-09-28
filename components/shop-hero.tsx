@@ -1,19 +1,15 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRightIcon } from "lucide-react";
-import Autoplay from "embla-carousel-autoplay";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 import { Button } from "@/components/ui/button";
-import {
-  type CarouselApi,
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
+
+gsap.registerPlugin(useGSAP);
 
 export type MenuData = {
   id: number;
@@ -22,169 +18,257 @@ export type MenuData = {
   description: string;
 };
 
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 export function ShopHero({ menudata }: { menudata: MenuData[] }) {
-  const [mainApi, setMainApi] = useState<CarouselApi>();
-  const [thumbApi, setThumbApi] = useState<CarouselApi>();
-  const [descriptionApi, setDescriptionApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
 
-  const plugins = useMemo(
-    () => [Autoplay({ delay: 3000, stopOnInteraction: false })],
-    []
-  );
+  const root = useRef<HTMLElement>(null);
+  const pizza = useRef<HTMLDivElement>(null);
+  const caption = useRef<HTMLDivElement>(null);
+  const index = useRef(0);
+  const busy = useRef(false);
+  const paused = useRef(false);
+  const intro = useRef<gsap.core.Timeline | null>(null);
 
-  useEffect(() => {
-    if (!mainApi) return;
-    mainApi.on("select", () => {
-      const selectedIndex = mainApi.selectedScrollSnap();
-      setCurrent(selectedIndex);
-      thumbApi?.scrollTo(selectedIndex);
-      descriptionApi?.scrollTo(selectedIndex);
-    });
-  }, [mainApi, thumbApi, descriptionApi]);
+  // The one orchestrated moment: page-load sequence.
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
 
-  useEffect(() => {
-    if (!thumbApi) return;
-    thumbApi.on("select", () => {
-      const selectedIndex = thumbApi.selectedScrollSnap();
-      setCurrent(selectedIndex);
-      mainApi?.scrollTo(selectedIndex);
-      descriptionApi?.scrollTo(selectedIndex);
-    });
-  }, [thumbApi, mainApi, descriptionApi]);
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+        intro.current = tl;
 
-  const handleThumbClick = useCallback(
-    (index: number) => {
-      mainApi?.scrollTo(index);
+        tl.from("[data-hero-line]", { yPercent: 115, duration: 0.9, stagger: 0.12 })
+          .from(
+            pizza.current,
+            { scale: 0.55, rotate: -30, autoAlpha: 0, duration: 1.1, ease: "back.out(1.3)" },
+            0.15
+          )
+          .from(
+            "[data-hero-fade]",
+            { y: 20, autoAlpha: 0, duration: 0.6, stagger: 0.1 },
+            "-=0.6"
+          )
+          .from(
+            caption.current,
+            { y: 12, autoAlpha: 0, duration: 0.5 },
+            "-=0.5"
+          )
+          .from(
+            "[data-hero-thumb]",
+            { y: 16, autoAlpha: 0, duration: 0.4, stagger: 0.05 },
+            "-=0.4"
+          );
+
+        gsap.to("[data-hero-glow]", {
+          opacity: 0.7,
+          scale: 1.06,
+          duration: 2.8,
+          ease: "sine.inOut",
+          repeat: -1,
+          yoyo: true,
+        });
+      });
     },
-    [mainApi]
+    { scope: root }
   );
+
+  // Responds to a person's action (or autoplay): the pizza spins out, the next spins in.
+  const goTo = useCallback((next: number) => {
+    if (next === index.current || busy.current) return;
+    if (intro.current?.isActive()) return;
+
+    if (prefersReducedMotion()) {
+      index.current = next;
+      setCurrent(next);
+      return;
+    }
+
+    busy.current = true;
+
+    gsap
+      .timeline({
+        onComplete: () => {
+          busy.current = false;
+        },
+      })
+      .to(pizza.current, {
+        rotate: -70,
+        scale: 0.6,
+        autoAlpha: 0,
+        duration: 0.35,
+        ease: "power2.in",
+      })
+      .to(caption.current, { y: -10, autoAlpha: 0, duration: 0.25 }, 0)
+      .add(() => {
+        index.current = next;
+        setCurrent(next);
+      })
+      .fromTo(
+        pizza.current,
+        { rotate: 70, scale: 0.6 },
+        { rotate: 0, scale: 1, autoAlpha: 1, duration: 0.7, ease: "back.out(1.5)" }
+      )
+      .fromTo(
+        caption.current,
+        { y: 12 },
+        { y: 0, autoAlpha: 1, duration: 0.4, ease: "power2.out" },
+        "<0.15"
+      );
+  }, []);
+
+  useEffect(() => {
+    if (prefersReducedMotion() || menudata.length < 2) return;
+
+    const id = setInterval(() => {
+      if (!paused.current) goTo((index.current + 1) % menudata.length);
+    }, 4500);
+
+    return () => clearInterval(id);
+  }, [goTo, menudata.length]);
+
+  const item = menudata[current];
+  if (!item) return null;
 
   return (
     <section
       id="home"
-      className="before:border-primary/20 relative flex-1 py-6 before:absolute before:inset-0 before:-z-10 before:-skew-y-3 before:border-b sm:py-8 lg:py-10"
+      ref={root}
+      onMouseEnter={() => (paused.current = true)}
+      onMouseLeave={() => (paused.current = false)}
+      onFocus={() => (paused.current = true)}
+      onBlur={() => (paused.current = false)}
+      className="relative isolate -mt-16 flex min-h-svh items-center overflow-hidden pt-16"
     >
-      <div className="mx-auto flex h-full max-w-7xl flex-col gap-8 px-4 sm:px-6 lg:gap-10 lg:px-8">
-        <div className="grid grid-cols-1 gap-6 gap-y-6 md:gap-y-8 lg:grid-cols-5">
-          <div className="flex w-full flex-col justify-center gap-4 max-lg:items-center lg:col-span-3 lg:h-72">
-            <h1 className="font-heading text-3xl leading-[1.29167] font-semibold text-balance max-lg:text-center sm:text-4xl lg:text-5xl">
-              Fresh pizza, made to order
-            </h1>
+      {/* Dark mode backdrop: texture + red glow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-20 hidden bg-[url('/dark-bg.jpg')] bg-cover bg-center opacity-40 dark:block"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 hidden bg-[radial-gradient(ellipse_60%_70%_at_75%_45%,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_70%)] dark:block"
+      />
 
-            <p className="text-muted-foreground max-w-xl text-xl max-lg:text-center">
-              Seven pizzas, hand-tossed and baked fresh — pick your
-              favourite and check out in minutes.
-            </p>
+      {/* Light mode backdrop: cheese-yellow field with the pizza doodle pattern tiled on top */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-20 bg-[oklch(0.9_0.16_92)] dark:hidden"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-[url('/light-bg.jpg')] bg-[length:420px_420px] opacity-60 mix-blend-multiply dark:hidden"
+      />
 
-            <div className="flex items-center gap-3.5">
-              <Button
-                asChild
-                size="lg"
-                className="group relative w-fit overflow-hidden rounded-full text-base before:absolute before:inset-0 before:rounded-[inherit] before:bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.5)_50%,transparent_75%,transparent_100%)] before:bg-[length:250%_250%,100%_100%] before:bg-[position:200%_0,0_0] before:bg-no-repeat before:transition-[background-position_0s_ease] before:duration-1000 hover:before:bg-[position:-100%_0,0_0] has-[>svg]:px-6 dark:before:bg-[linear-gradient(45deg,transparent_25%,rgba(0,0,0,0.2)_50%,transparent_75%,transparent_100%)]"
+      <div className="mx-auto grid w-full max-w-7xl items-center gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:gap-6 lg:px-8 lg:py-6">
+        {/* Copy */}
+        <div className="flex flex-col items-start gap-5 max-lg:items-center max-lg:text-center">
+          <h1 className="font-heading text-[clamp(2rem,min(4.6vw,8svh),3.25rem)] font-extrabold uppercase leading-[0.95] tracking-tight">
+            <span className="block overflow-hidden pb-1">
+              <span data-hero-line className="block">
+                Fresh pizza,
+              </span>
+            </span>
+            <span className="block overflow-hidden pb-1">
+              <span
+                data-hero-line
+                className="block text-primary [text-shadow:3px_3px_0_var(--foreground)] dark:[text-shadow:3px_3px_0_var(--gold)]"
               >
-                <Link href="/shop/menu">
-                  View menu
-                  <ArrowRightIcon className="transition-transform duration-200 group-hover:translate-x-0.5" />
-                </Link>
-              </Button>
+                made to order
+              </span>
+            </span>
+          </h1>
+
+          <p
+            data-hero-fade
+            className="max-w-md text-lg leading-7 text-foreground/80 dark:text-muted-foreground"
+          >
+            Seven pizzas, hand-tossed and baked fresh. Pick your favourite and
+            check out in minutes.
+          </p>
+
+          <div data-hero-fade className="flex flex-wrap gap-3 max-lg:justify-center">
+            <Button
+              asChild
+              size="lg"
+              className="rounded-full border-2 border-foreground px-7 text-base shadow-[4px_4px_0_0_var(--foreground)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--foreground)] dark:border-gold dark:shadow-[4px_4px_0_0_var(--gold)] dark:hover:shadow-[2px_2px_0_0_var(--gold)]"
+            >
+              <Link href="/shop/menu">Order now</Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="rounded-full border-2 border-foreground bg-background px-7 text-base shadow-[4px_4px_0_0_var(--foreground)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--foreground)] dark:border-foreground/70 dark:bg-card dark:shadow-[4px_4px_0_0_var(--primary)] dark:hover:shadow-[2px_2px_0_0_var(--primary)]"
+            >
+              <Link href="#about-us">Our story</Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Pizza + selector */}
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative aspect-square h-[min(44svh,360px)] max-w-full lg:h-[min(50svh,480px)]">
+            {/* Dark mode: soft red glow */}
+            <div
+              data-hero-glow
+              aria-hidden
+              className="absolute inset-[8%] hidden rounded-full bg-primary/40 blur-3xl dark:block"
+            />
+            {/* Plate with a hard offset shadow: red in light, dark with red trim in dark */}
+            <div
+              aria-hidden
+              className="absolute inset-[4%] rounded-full border-4 border-foreground bg-primary shadow-[8px_8px_0_0_var(--foreground)] dark:border-primary dark:bg-card dark:shadow-[8px_8px_0_0_var(--primary)]"
+            />
+            <div ref={pizza} className="absolute inset-0">
+              <Image
+                src={item.img}
+                alt={item.imgAlt}
+                fill
+                priority
+                sizes="(max-width: 1024px) 80vw, 480px"
+                className="object-contain drop-shadow-[0_18px_18px_rgba(0,0,0,0.35)] dark:drop-shadow-[0_30px_40px_rgba(0,0,0,0.45)]"
+              />
             </div>
           </div>
 
-          <Carousel
-            className="w-full lg:col-span-2"
-            setApi={setMainApi}
-            plugins={plugins}
-            opts={{ loop: true }}
-          >
-            <CarouselContent>
-              {menudata.map((item) => (
-                <CarouselItem
-                  key={item.id}
-                  className="flex w-full items-center justify-center"
-                >
-                  <Image
-                    src={item.img}
-                    alt={item.imgAlt}
-                    width={288}
-                    height={288}
-                    className="size-56 object-contain sm:size-64 lg:size-72"
-                  />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
-        </div>
+          <div ref={caption} className="min-h-16 max-w-sm text-center">
+            <p className="font-heading text-xl font-bold">{item.imgAlt}</p>
+            <p className="mt-1 text-sm text-foreground/70 dark:text-muted-foreground">
+              {item.description}
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 gap-10 gap-y-4 md:gap-y-6 lg:grid-cols-5 lg:gap-16">
-          <Carousel
-            className="relative w-full max-lg:order-2 lg:col-span-3"
-            setApi={setThumbApi}
-            opts={{ loop: true }}
-          >
-            <div className="from-background pointer-events-none absolute inset-y-0 left-0 z-1 w-25 bg-linear-to-r via-85% to-transparent" />
-            <div className="from-background pointer-events-none absolute inset-y-0 right-0 z-1 w-25 bg-linear-to-l via-85% to-transparent" />
-            <CarouselContent className="my-1 flex">
-              {menudata.map((item, index) => (
-                <CarouselItem
-                  key={item.id}
-                  className={cn(
-                    "basis-1/2 cursor-pointer items-center sm:basis-1/3 md:basis-1/4 lg:basis-1/3 xl:basis-1/4"
-                  )}
-                  onClick={() => handleThumbClick(index)}
-                >
-                  <div className="relative flex h-20 items-center justify-center">
-                    <div
-                      className={cn(
-                        "absolute bottom-0 -z-1",
-                        current === index ? "text-primary" : "text-border"
-                      )}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="116"
-                        height="66"
-                        viewBox="0 0 161 92"
-                        fill="none"
-                      >
-                        <path
-                          d="M0.682517 80.6118L0.501193 39.6946C0.480127 34.9409 3.80852 30.8294 8.46241 29.8603L148.426 0.713985C154.636 -0.579105 160.465 4.16121 160.465 10.504V80.7397C160.465 86.2674 155.98 90.7465 150.453 90.7397L10.6701 90.5674C5.16936 90.5607 0.706893 86.1125 0.682517 80.6118Z"
-                          stroke="currentColor"
-                        />
-                      </svg>
-                    </div>
-                    <Image
-                      src={item.img}
-                      alt={item.imgAlt}
-                      width={64}
-                      height={64}
-                      className="size-16 object-contain"
-                    />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
-
-          <Carousel
-            className="flex w-full items-center justify-center lg:col-span-2"
-            setApi={setDescriptionApi}
-            opts={{ loop: true }}
-          >
-            <CarouselContent>
-              {menudata.map((item) => (
-                <CarouselItem
-                  key={item.id}
-                  className="flex h-full min-h-14 w-full flex-col items-center justify-center gap-2 px-6 text-center"
-                >
-                  <p className="font-medium text-foreground">{item.imgAlt}</p>
-                  <p className="text-card-foreground text-sm">
-                    {item.description}
-                  </p>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
+          <div className="flex flex-wrap justify-center gap-3">
+            {menudata.map((m, i) => (
+              <button
+                key={m.id}
+                data-hero-thumb
+                type="button"
+                onClick={() => goTo(i)}
+                aria-label={`Show ${m.imgAlt}`}
+                aria-current={i === current}
+                className={cn(
+                  "size-12 rounded-full border-2 bg-card p-1.5 transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  i === current
+                    ? "border-foreground shadow-[3px_3px_0_0_var(--foreground)] dark:border-primary dark:shadow-[3px_3px_0_0_var(--primary)]"
+                    : "border-foreground/25 hover:border-foreground dark:border-border dark:hover:border-primary/60"
+                )}
+              >
+                <Image
+                  src={m.img}
+                  alt=""
+                  width={48}
+                  height={48}
+                  className="size-full object-contain"
+                />
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </section>
