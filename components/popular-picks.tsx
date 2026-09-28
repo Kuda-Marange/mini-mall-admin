@@ -1,84 +1,52 @@
-import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import { ArrowRightIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardTitle,
-  CardDescription,
-  CardHeader,
-} from "@/components/ui/card";
-import { formatPrice } from "@/lib/format-price";
+import { ProductCard } from "@/components/product-card";
+import { Reveal } from "@/components/reveal";
 import { PRODUCTS } from "@/lib/products";
 
 export function PopularPicks() {
   const featured = PRODUCTS.slice(0, 3);
 
   return (
-    <section id="popular-picks" className="py-8 sm:py-16 lg:py-24">
+    <section
+      id="popular-picks"
+      className="relative overflow-hidden py-12 sm:py-16 lg:py-20"
+    >
+      {/* Section backdrop — echoes the hero without repeating it */}
+      <div className="absolute inset-0 -z-10 bg-muted/40 dark:bg-transparent" />
+      <div className="absolute inset-0 -z-10 bg-[url('/light-bg.jpg')] bg-[length:420px_420px] opacity-20 mix-blend-multiply dark:hidden" />
+      <div className="absolute inset-0 -z-10 hidden dark:block bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,color-mix(in_oklch,var(--primary)_10%,transparent),transparent)]" />
+
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto mb-12 flex max-w-2xl flex-col items-center justify-center space-y-4 text-center sm:mb-16 lg:mb-24">
-          <Badge variant="outline" className="h-auto text-sm font-normal">
-            Popular Picks
-          </Badge>
-          <h2 className="text-2xl font-semibold font-heading md:text-3xl lg:text-4xl">
-            A few favourites to start with
-          </h2>
-          <p className="text-muted-foreground text-xl">
-            Not sure where to start? These are a great first order.
-          </p>
+        <div className="mb-10 flex flex-col gap-6 sm:mb-12 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <span className="inline-flex items-center rounded-full border-2 border-foreground bg-background px-3 py-1 text-xs font-semibold shadow-[3px_3px_0_0_var(--foreground)] dark:border-gold dark:shadow-[3px_3px_0_0_var(--gold)]">
+              Popular Picks
+            </span>
+
+            <h2 className="mt-4 max-w-2xl text-balance font-heading text-3xl font-black leading-[1.05] tracking-tight sm:text-4xl lg:text-5xl">
+              A few favourites to start with
+            </h2>
+            <p className="mt-3 text-muted-foreground">
+              Not sure where to start? These are a great first order.
+            </p>
+          </div>
+
+          <Link
+            href="/shop/menu"
+            className="group inline-flex shrink-0 items-center gap-2 self-start rounded-full border-2 border-foreground bg-background px-4 py-2 text-sm font-semibold shadow-[3px_3px_0_0_var(--foreground)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_0_var(--foreground)] dark:border-gold dark:shadow-[3px_3px_0_0_var(--gold)] dark:hover:shadow-[1px_1px_0_0_var(--gold)] sm:self-auto"
+          >
+            View full menu
+            <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Reveal className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {featured.map((product) => (
-            <Card
-              className="hover:border-primary border-primary/10 rounded-none border pt-0 shadow-none ring-0 transition-colors duration-300 max-lg:last:col-span-full"
-              key={product.name}
-            >
-              <CardContent className="px-0">
-                <div className="relative aspect-square w-full overflow-hidden">
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover"
-                  />
-                </div>
-              </CardContent>
-              <CardHeader className="mb-2 gap-3">
-                <CardTitle className="text-xl font-semibold">
-                  <Link href={`/shop/${encodeURIComponent(product.name)}`}>
-                    {product.name}
-                  </Link>
-                </CardTitle>
-                <CardDescription className="text-base">
-                  {product.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <span className="text-primary font-semibold">
-                    {formatPrice(product.priceInCents)}
-                  </span>
-                  <Button
-                    className="group bg-primary/10 hover:bg-primary/20 text-primary rounded-full text-sm has-[>svg]:px-6"
-                    size="lg"
-                    asChild
-                  >
-                    <Link href={`/shop/${encodeURIComponent(product.name)}`}>
-                      View
-                      <ArrowRightIcon className="transition-transform duration-200 group-hover:translate-x-0.5" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <ProductCard key={product.name} product={product} />
           ))}
-        </div>
+        </Reveal>
       </div>
     </section>
   );
