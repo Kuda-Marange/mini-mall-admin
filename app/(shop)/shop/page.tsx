@@ -1,8 +1,6 @@
-import Link from "next/link";
-import Image from "next/image";
-import { formatPrice } from "@/lib/format-price";
 import { PRODUCTS } from "@/lib/products";
 import { ShopHero, type MenuData } from "@/components/shop-hero";
+import { TrustStrip } from "@/components/trust-strip";
 import { PopularPicks } from "@/components/popular-picks";
 import { AboutUs } from "@/components/about-us";
 
@@ -15,11 +13,10 @@ export default function ShopPage() {
   }));
 
   return (
-    <div className="space-y-8">
+    <div>
       <ShopHero menudata={menudata} />
-
+      <TrustStrip />
       <PopularPicks />
-
       <AboutUs />
     </div>
   );
