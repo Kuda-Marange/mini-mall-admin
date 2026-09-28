@@ -142,24 +142,42 @@ export function ShopHero({ menudata }: { menudata: MenuData[] }) {
       onMouseLeave={() => (paused.current = false)}
       onFocus={() => (paused.current = true)}
       onBlur={() => (paused.current = false)}
-      className="relative isolate overflow-hidden"
+      className="relative isolate -mt-16 flex min-h-svh items-center overflow-hidden pt-16"
     >
+      {/* Dark mode backdrop: texture + red glow */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_70%_at_75%_45%,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_70%)]"
+        className="pointer-events-none absolute inset-0 -z-20 hidden bg-[url('/dark-bg.jpg')] bg-cover bg-center opacity-40 dark:block"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 hidden bg-[radial-gradient(ellipse_60%_70%_at_75%_45%,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_70%)] dark:block"
       />
 
-      <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:gap-6 lg:px-8 lg:py-20">
+      {/* Light mode backdrop: cheese-yellow field with the pizza doodle pattern tiled on top */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-20 bg-[oklch(0.9_0.16_92)] dark:hidden"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-[url('/light-bg.jpg')] bg-[length:420px_420px] opacity-60 mix-blend-multiply dark:hidden"
+      />
+
+      <div className="mx-auto grid w-full max-w-7xl items-center gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:gap-6 lg:px-8 lg:py-6">
         {/* Copy */}
-        <div className="flex flex-col items-start gap-6 max-lg:items-center max-lg:text-center">
-          <h1 className="font-heading text-5xl font-extrabold uppercase leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
+        <div className="flex flex-col items-start gap-5 max-lg:items-center max-lg:text-center">
+          <h1 className="font-heading text-[clamp(2rem,min(4.6vw,8svh),3.25rem)] font-extrabold uppercase leading-[0.95] tracking-tight">
             <span className="block overflow-hidden pb-1">
               <span data-hero-line className="block">
                 Fresh pizza,
               </span>
             </span>
             <span className="block overflow-hidden pb-1">
-              <span data-hero-line className="block text-primary">
+              <span
+                data-hero-line
+                className="block text-primary [text-shadow:3px_3px_0_var(--foreground)] dark:[text-shadow:3px_3px_0_var(--gold)]"
+              >
                 made to order
               </span>
             </span>
@@ -167,21 +185,25 @@ export function ShopHero({ menudata }: { menudata: MenuData[] }) {
 
           <p
             data-hero-fade
-            className="max-w-md text-lg leading-7 text-muted-foreground"
+            className="max-w-md text-lg leading-7 text-foreground/80 dark:text-muted-foreground"
           >
             Seven pizzas, hand-tossed and baked fresh. Pick your favourite and
             check out in minutes.
           </p>
 
           <div data-hero-fade className="flex flex-wrap gap-3 max-lg:justify-center">
-            <Button asChild size="lg" className="rounded-full px-7 text-base">
+            <Button
+              asChild
+              size="lg"
+              className="rounded-full border-2 border-foreground px-7 text-base shadow-[4px_4px_0_0_var(--foreground)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--foreground)] dark:border-gold dark:shadow-[4px_4px_0_0_var(--gold)] dark:hover:shadow-[2px_2px_0_0_var(--gold)]"
+            >
               <Link href="/shop/menu">Order now</Link>
             </Button>
             <Button
               asChild
               size="lg"
               variant="outline"
-              className="rounded-full px-7 text-base"
+              className="rounded-full border-2 border-foreground bg-background px-7 text-base shadow-[4px_4px_0_0_var(--foreground)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--foreground)] dark:border-foreground/70 dark:bg-card dark:shadow-[4px_4px_0_0_var(--primary)] dark:hover:shadow-[2px_2px_0_0_var(--primary)]"
             >
               <Link href="#about-us">Our story</Link>
             </Button>
@@ -189,12 +211,18 @@ export function ShopHero({ menudata }: { menudata: MenuData[] }) {
         </div>
 
         {/* Pizza + selector */}
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative aspect-square w-full max-w-[480px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative aspect-square h-[min(44svh,360px)] max-w-full lg:h-[min(50svh,480px)]">
+            {/* Dark mode: soft red glow */}
             <div
               data-hero-glow
               aria-hidden
-              className="absolute inset-[8%] rounded-full bg-primary/40 blur-3xl"
+              className="absolute inset-[8%] hidden rounded-full bg-primary/40 blur-3xl dark:block"
+            />
+            {/* Plate with a hard offset shadow: red in light, dark with red trim in dark */}
+            <div
+              aria-hidden
+              className="absolute inset-[4%] rounded-full border-4 border-foreground bg-primary shadow-[8px_8px_0_0_var(--foreground)] dark:border-primary dark:bg-card dark:shadow-[8px_8px_0_0_var(--primary)]"
             />
             <div ref={pizza} className="absolute inset-0">
               <Image
@@ -203,14 +231,14 @@ export function ShopHero({ menudata }: { menudata: MenuData[] }) {
                 fill
                 priority
                 sizes="(max-width: 1024px) 80vw, 480px"
-                className="object-contain drop-shadow-[0_30px_40px_rgba(0,0,0,0.45)]"
+                className="object-contain drop-shadow-[0_18px_18px_rgba(0,0,0,0.35)] dark:drop-shadow-[0_30px_40px_rgba(0,0,0,0.45)]"
               />
             </div>
           </div>
 
           <div ref={caption} className="min-h-16 max-w-sm text-center">
             <p className="font-heading text-xl font-bold">{item.imgAlt}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-sm text-foreground/70 dark:text-muted-foreground">
               {item.description}
             </p>
           </div>
@@ -225,15 +253,17 @@ export function ShopHero({ menudata }: { menudata: MenuData[] }) {
                 aria-label={`Show ${m.imgAlt}`}
                 aria-current={i === current}
                 className={cn(
-                  "size-14 rounded-full border bg-card p-1.5 transition-colors duration-200 hover:border-primary/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                  i === current ? "border-primary" : "border-border"
+                  "size-12 rounded-full border-2 bg-card p-1.5 transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  i === current
+                    ? "border-foreground shadow-[3px_3px_0_0_var(--foreground)] dark:border-primary dark:shadow-[3px_3px_0_0_var(--primary)]"
+                    : "border-foreground/25 hover:border-foreground dark:border-border dark:hover:border-primary/60"
                 )}
               >
                 <Image
                   src={m.img}
                   alt=""
-                  width={56}
-                  height={56}
+                  width={48}
+                  height={48}
                   className="size-full object-contain"
                 />
               </button>
