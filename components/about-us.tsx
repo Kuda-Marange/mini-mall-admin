@@ -40,47 +40,48 @@ export function AboutUs() {
   const statsRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
-    () => {
-      const reduceMotion = window.matchMedia(
-        "(prefers-reduced-motion: reduce)",
-      ).matches;
+  () => {
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
-      const numberEls = gsap.utils.toArray<HTMLSpanElement>(
+    const numberEls = Array.from(
+      statsRef.current?.querySelectorAll<HTMLSpanElement>(
         "[data-stat-value]",
-        statsRef.current ?? undefined,
-      );
+      ) ?? [],
+    );
 
-      if (reduceMotion) {
-        numberEls.forEach((el) => {
-          el.textContent = `${el.dataset.target}${el.dataset.suffix ?? ""}`;
-        });
-        return;
-      }
-
-      ScrollTrigger.create({
-        trigger: statsRef.current,
-        start: "top 80%",
-        once: true,
-        onEnter: () => {
-          numberEls.forEach((el) => {
-            const target = Number(el.dataset.target);
-            const suffix = el.dataset.suffix ?? "";
-            const counter = { value: 0 };
-
-            gsap.to(counter, {
-              value: target,
-              duration: 1.4,
-              ease: "power2.out",
-              onUpdate: () => {
-                el.textContent = `${Math.round(counter.value)}${suffix}`;
-              },
-            });
-          });
-        },
+    if (reduceMotion) {
+      numberEls.forEach((el) => {
+        el.textContent = `${el.dataset.target}${el.dataset.suffix ?? ""}`;
       });
-    },
-    { scope: statsRef },
-  );
+      return;
+    }
+
+    ScrollTrigger.create({
+      trigger: statsRef.current,
+      start: "top 80%",
+      once: true,
+      onEnter: () => {
+        numberEls.forEach((el) => {
+          const target = Number(el.dataset.target);
+          const suffix = el.dataset.suffix ?? "";
+          const counter = { value: 0 };
+
+          gsap.to(counter, {
+            value: target,
+            duration: 1.4,
+            ease: "power2.out",
+            onUpdate: () => {
+              el.textContent = `${Math.round(counter.value)}${suffix}`;
+            },
+          });
+        });
+      },
+    });
+  },
+  { scope: statsRef },
+);
 
   return (
     <section
