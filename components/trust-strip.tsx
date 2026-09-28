@@ -10,7 +10,7 @@ const items = [
 
 export function TrustStrip() {
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <ul className="grid grid-cols-2 divide-border overflow-hidden rounded-2xl border border-border bg-card sm:grid-cols-3 lg:grid-cols-5 lg:divide-x">
         {items.map(({ icon: Icon, title, text }) => (
           <li key={title} className="flex items-center gap-3 p-4 sm:p-5">
