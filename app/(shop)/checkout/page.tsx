@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,8 +9,12 @@ import { ArrowLeft, ArrowRight, Check, ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+import { PageBanner } from "@/components/page-banner";
+import { ReceiptView } from "@/components/receipt-view";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format-price";
+import { getProductByName } from "@/lib/products";
+import { saveRecentOrder } from "@/lib/recent-orders";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -20,6 +25,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import type { Order } from "@/lib/types";
 
 const checkoutFormSchema = z.object({
   customerName: z
@@ -29,6 +36,52 @@ const checkoutFormSchema = z.object({
 
 type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;
 
+/* -------------------------------------------------------------------------- */
+/*  Step indicator: three hard-shadow circles, filled in as you progress       */
+/* -------------------------------------------------------------------------- */
+
+function Steps({ current }: { current: 1 | 2 | 3 }) {
+  const steps = ["Shopping cart", "Checkout details", "Order complete"];
+
+  return (
+    <div className="mt-8 flex items-center justify-center">
+      {steps.map((label, i) => {
+        const step = (i + 1) as 1 | 2 | 3;
+        const done = step < current;
+        const active = step === current;
+
+        return (
+          <div key={label} className="flex items-center">
+            {i > 0 && (
+              <div
+                className={cn(
+                  "mx-3 h-0.5 w-10 sm:mx-6 sm:w-20",
+                  step <= current ? "bg-foreground" : "bg-primary-foreground/30 dark:bg-border"
+                )}
+              />
+            )}
+            <div className="flex items-center">
+              <div
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-full border-2 border-foreground text-xs font-bold",
+                  done || active
+                    ? "bg-foreground text-background shadow-[2px_2px_0_0_var(--foreground)] dark:border-gold dark:bg-gold dark:text-gold-foreground dark:shadow-[2px_2px_0_0_var(--gold)]"
+                    : "bg-transparent text-foreground/50 dark:border-border dark:text-muted-foreground"
+                )}
+              >
+                {done ? <Check className="h-4 w-4" /> : step}
+              </div>
+              <span className="ml-2 hidden text-xs font-medium sm:block">
+                {label}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
 
@@ -37,6 +90,9 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
+  // Snapshot built right before clearCart() wipes the cart, so the
+  // confirmation screen and receipt still have item/total data afterward.
+  const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutFormSchema),
@@ -72,7 +128,38 @@ export default function CheckoutPage() {
         return;
       }
 
+      // Build the snapshot before the cart is cleared below — this is the
+      // only place we still have the item list and customer name together.
+      // orderedAt matches the "YYYY-MM-DD" shape real Supabase rows use.
+      const firstItemName = items[0]?.pizzaName ?? "Order";
+      const orderedAt = new Date().toISOString().slice(0, 10);
+
+      const orderSnapshot: Order = {
+        id: result.id,
+        customerName: values.customerName,
+        pizzaName: firstItemName,
+        orderedAt,
+        status: "pending",
+        amountInCents: totalInCents,
+        items: items.map((item) => ({
+          productName: item.pizzaName,
+          quantity: item.quantity,
+          priceInCents: item.priceInCents,
+        })),
+      };
+
+      const extraCount = orderSnapshot.items.length - 1;
+
+      saveRecentOrder({
+        code: result.id,
+        customerName: values.customerName,
+        pizzaName:
+          extraCount > 0 ? `${firstItemName} +${extraCount} more` : firstItemName,
+        placedAt: new Date().toISOString(),
+      });
+
       clearCart();
+      setPlacedOrder(orderSnapshot);
       setPlacedOrderId(result.id);
     } catch (err) {
       console.error("Failed to place order:", err);
@@ -88,85 +175,21 @@ export default function CheckoutPage() {
 
   if (placedOrderId) {
     return (
-      <main className="min-h-screen bg-background">
-        {/* Header */}
+      <div>
+        <PageBanner
+          title="Order Complete"
+          description="Thank you for your order. We've received your request and will begin processing it shortly."
+          after={<Steps current={3} />}
+        />
 
-        <section className="mx-auto max-w-7xl px-4 pb-8 pt-10 sm:px-6 lg:px-8 lg:pt-14">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              Order Confirmation
-            </p>
-
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Order Complete
-            </h1>
-
-            <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
-              Thank you for your order. We&apos;ve received your request and
-              will begin processing it shortly.
-            </p>
-          </div>
-
-          {/* Progress */}
-
-          <div className="mx-auto mt-10 max-w-2xl">
-            <div className="flex items-center justify-center">
-              {/* Step 1 */}
-
-              <div className="flex items-center">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background">
-                  <Check className="h-4 w-4" />
-                </div>
-
-                <span className="ml-2 hidden text-xs font-medium sm:block">
-                  Shopping cart
-                </span>
-              </div>
-
-              <div className="mx-3 h-px w-10 bg-foreground sm:mx-6 sm:w-20" />
-
-              {/* Step 2 */}
-
-              <div className="flex items-center">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background">
-                  <Check className="h-4 w-4" />
-                </div>
-
-                <span className="ml-2 hidden text-xs font-medium sm:block">
-                  Checkout details
-                </span>
-              </div>
-
-              <div className="mx-3 h-px w-10 bg-foreground sm:mx-6 sm:w-20" />
-
-              {/* Step 3 */}
-
-              <div className="flex items-center">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background">
-                  <Check className="h-4 w-4" />
-                </div>
-
-                <span className="ml-2 hidden text-xs font-medium sm:block">
-                  Order complete
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Confirmation */}
-
-        <section className="mx-auto max-w-2xl px-4 pb-20 sm:px-6 lg:px-8">
-          <div className="rounded-3xl border border-border/60 bg-card p-6 text-center shadow-sm sm:p-10">
+        <section className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+          <div className="rounded-3xl border-2 border-foreground bg-card p-6 text-center shadow-[6px_6px_0_0_var(--foreground)] sm:p-10 dark:border-gold dark:shadow-[6px_6px_0_0_var(--gold)]">
             {/* Success icon */}
-
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-foreground text-background">
-                <Check className="h-6 w-6" />
-              </div>
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border-2 border-foreground bg-primary text-primary-foreground shadow-[3px_3px_0_0_var(--foreground)] dark:border-background dark:bg-gold dark:text-gold-foreground dark:shadow-[3px_3px_0_0_var(--background)]">
+              <Check className="h-8 w-8" />
             </div>
 
-            <h2 className="mt-6 text-2xl font-semibold tracking-tight text-foreground">
+            <h2 className="mt-6 font-heading text-2xl font-extrabold tracking-tight text-foreground">
               Your order has been placed!
             </h2>
 
@@ -176,25 +199,21 @@ export default function CheckoutPage() {
             </p>
 
             {/* Order ID */}
-
-            <div className="mx-auto mt-6 max-w-sm rounded-2xl bg-muted/40 p-5">
+            <div className="mx-auto mt-6 max-w-sm rounded-2xl border-2 border-foreground bg-background p-5 dark:border-border">
               <p className="text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
                 Order Number
               </p>
-
-              <p className="mt-2 break-all text-lg font-semibold text-foreground">
+              <p className="mt-2 break-all font-heading text-lg font-bold text-foreground">
                 {placedOrderId}
               </p>
             </div>
 
             {/* Status */}
-
             <div className="mt-8 space-y-3 text-left">
-              <div className="flex items-center gap-3 rounded-xl border border-border/50 p-3">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground text-background">
+              <div className="flex items-center gap-3 rounded-xl border-2 border-foreground p-3 dark:border-border">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground dark:bg-gold dark:text-gold-foreground">
                   <Check className="h-3.5 w-3.5" />
                 </div>
-
                 <div>
                   <p className="text-sm font-medium">Order received</p>
                   <p className="text-xs text-muted-foreground">
@@ -203,26 +222,22 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 rounded-xl border border-border/50 p-3">
+              <div className="flex items-center gap-3 rounded-xl border-2 border-foreground/30 p-3 dark:border-border/60">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted">
                   <span className="h-2 w-2 rounded-full bg-foreground" />
                 </div>
-
                 <div>
-                  <p className="text-sm font-medium">
-                    Preparing your order
-                  </p>
+                  <p className="text-sm font-medium">Preparing your order</p>
                   <p className="text-xs text-muted-foreground">
                     We&apos;ll begin preparing your pizzas shortly.
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 rounded-xl border border-border/50 p-3">
+              <div className="flex items-center gap-3 rounded-xl border-2 border-foreground/30 p-3 dark:border-border/60">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted">
                   <span className="h-2 w-2 rounded-full bg-muted-foreground" />
                 </div>
-
                 <div>
                   <p className="text-sm font-medium">Ready for you</p>
                   <p className="text-xs text-muted-foreground">
@@ -233,12 +248,11 @@ export default function CheckoutPage() {
             </div>
 
             {/* Actions */}
-
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button
                 asChild
                 variant="outline"
-                className="h-11 flex-1 rounded-full"
+                className="h-11 flex-1 rounded-full border-2 border-foreground shadow-[3px_3px_0_0_var(--foreground)] hover:translate-x-px hover:translate-y-px hover:shadow-[2px_2px_0_0_var(--foreground)] dark:border-border dark:shadow-none dark:hover:translate-x-0 dark:hover:translate-y-0"
               >
                 <Link href="/shop">
                   <ArrowLeft className="mr-2 h-4 w-4" />
@@ -248,16 +262,23 @@ export default function CheckoutPage() {
 
               <Button
                 type="button"
-                className="h-11 flex-1 rounded-full"
-                onClick={() => router.push("/")}
+                className="h-11 flex-1 rounded-full border-2 border-foreground shadow-[3px_3px_0_0_var(--foreground)] hover:translate-x-px hover:translate-y-px hover:shadow-[2px_2px_0_0_var(--foreground)] dark:border-gold dark:shadow-[3px_3px_0_0_var(--gold)] dark:hover:shadow-[2px_2px_0_0_var(--gold)]"
+                onClick={() => router.push(`/track-order/${placedOrderId}`)}
               >
-                Back to Home
+                Track This Order
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
+
+            {/* Receipt */}
+            {placedOrder && (
+              <div className="mt-4 flex justify-center">
+                <ReceiptView order={placedOrder} />
+              </div>
+            )}
           </div>
         </section>
-      </main>
+      </div>
     );
   }
 
@@ -267,22 +288,27 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <main className="min-h-screen bg-background">
-        <div className="mx-auto flex min-h-[70vh] max-w-lg items-center justify-center px-6 py-16">
+      <div>
+        <PageBanner title="Checkout" />
+
+        <div className="mx-auto flex min-h-[50vh] max-w-lg items-center justify-center px-6 py-16">
           <div className="flex flex-col items-center text-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)] dark:border-primary dark:shadow-[4px_4px_0_0_var(--primary)]">
               <ShoppingBag className="h-8 w-8 text-muted-foreground" />
             </div>
 
-            <h1 className="mt-6 text-2xl font-semibold tracking-tight">
+            <h2 className="mt-6 text-2xl font-semibold tracking-tight">
               Your cart is empty
-            </h1>
+            </h2>
 
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Add some pizzas to your cart before proceeding to checkout.
             </p>
 
-            <Button asChild className="mt-6 rounded-full px-6">
+            <Button
+              asChild
+              className="mt-6 rounded-full border-2 border-foreground px-6 shadow-[3px_3px_0_0_var(--foreground)] hover:translate-x-px hover:translate-y-px hover:shadow-[2px_2px_0_0_var(--foreground)] dark:border-gold dark:shadow-[3px_3px_0_0_var(--gold)] dark:hover:shadow-[2px_2px_0_0_var(--gold)]"
+            >
               <Link href="/shop">
                 Browse Pizzas
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -290,7 +316,7 @@ export default function CheckoutPage() {
             </Button>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -299,85 +325,15 @@ export default function CheckoutPage() {
   // ==================================================
 
   return (
-    <main className="min-h-screen bg-background">
-      {/* ==================================================
-          PAGE HEADER
-      ================================================== */}
+    <div>
+      <PageBanner
+        title="Checkout Details"
+        description="Enter your details below to complete your order."
+        after={<Steps current={2} />}
+      />
 
-      <section className="mx-auto max-w-7xl px-4 pb-8 pt-10 sm:px-6 lg:px-8 lg:pt-14">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            Almost There
-          </p>
-
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Checkout Details
-          </h1>
-
-          <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
-            Enter your details below to complete your order.
-          </p>
-        </div>
-
-        {/* ==================================================
-            CHECKOUT STEPS
-        ================================================== */}
-
-        <div className="mx-auto mt-10 max-w-2xl">
-          <div className="flex items-center justify-center">
-            {/* Step 1 */}
-
-            <div className="flex items-center">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background">
-                <Check className="h-4 w-4" />
-              </div>
-
-              <span className="ml-2 hidden text-xs font-medium sm:block">
-                Shopping cart
-              </span>
-            </div>
-
-            {/* Connector */}
-
-            <div className="mx-3 h-px w-10 bg-foreground sm:mx-6 sm:w-20" />
-
-            {/* Step 2 */}
-
-            <div className="flex items-center">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background text-xs font-medium">
-                2
-              </div>
-
-              <span className="ml-2 hidden text-xs font-medium sm:block">
-                Checkout details
-              </span>
-            </div>
-
-            {/* Connector */}
-
-            <div className="mx-3 h-px w-10 bg-border sm:mx-6 sm:w-20" />
-
-            {/* Step 3 */}
-
-            <div className="flex items-center text-muted-foreground">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium">
-                3
-              </div>
-
-              <span className="ml-2 hidden text-xs font-medium sm:block">
-                Order complete
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ==================================================
-          CHECKOUT CONTENT
-      ================================================== */}
-
-      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
           {/* ==================================================
               LEFT — CUSTOMER DETAILS
           ================================================== */}
@@ -387,22 +343,17 @@ export default function CheckoutPage() {
               <h2 className="text-base font-semibold text-foreground">
                 Your Details
               </h2>
-
               <p className="mt-1 text-xs text-muted-foreground">
                 Tell us who the order is for.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm sm:p-6">
+            <div className="rounded-2xl border-2 border-foreground bg-card p-5 shadow-[6px_6px_0_0_var(--foreground)] sm:p-6 dark:border-primary dark:shadow-[6px_6px_0_0_var(--primary)]">
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
                   className="space-y-6"
                 >
-                  {/* ==================================================
-                      CUSTOMER NAME
-                  ================================================== */}
-
                   <FormField
                     control={form.control}
                     name="customerName"
@@ -411,33 +362,27 @@ export default function CheckoutPage() {
                         <FormLabel className="text-sm font-medium">
                           Full Name
                         </FormLabel>
-
                         <FormControl>
                           <Input
                             placeholder="e.g. Tendai Moyo"
-                            className="h-11 rounded-xl bg-background"
+                            className="h-11 rounded-xl border-2 border-foreground bg-background focus-visible:ring-primary dark:border-border"
                             {...field}
                           />
                         </FormControl>
-
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  {/* Information */}
-
-                  <div className="rounded-xl bg-muted/30 p-4">
+                  <div className="rounded-xl border-2 border-foreground/20 bg-muted/30 p-4 dark:border-border">
                     <div className="flex gap-3">
-                      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-background">
+                      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-foreground bg-background dark:border-border">
                         <Check className="h-3.5 w-3.5" />
                       </div>
-
                       <div>
                         <p className="text-sm font-medium">
                           Your information is secure
                         </p>
-
                         <p className="mt-1 text-xs leading-5 text-muted-foreground">
                           We only use your details to process and fulfill your
                           order.
@@ -446,21 +391,17 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  {/* Error */}
-
                   {submitError && (
-                    <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3">
+                    <div className="rounded-xl border-2 border-destructive/40 bg-destructive/5 p-3">
                       <p className="text-sm text-destructive">
                         {submitError}
                       </p>
                     </div>
                   )}
 
-                  {/* Submit */}
-
                   <Button
                     type="submit"
-                    className="h-12 w-full rounded-full text-sm font-medium"
+                    className="h-12 w-full rounded-full border-2 border-foreground text-sm font-semibold shadow-[4px_4px_0_0_var(--foreground)] hover:translate-x-px hover:translate-y-px hover:shadow-[2px_2px_0_0_var(--foreground)] dark:border-gold dark:shadow-[4px_4px_0_0_var(--gold)] dark:hover:shadow-[2px_2px_0_0_var(--gold)]"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
@@ -475,8 +416,6 @@ export default function CheckoutPage() {
                 </form>
               </Form>
             </div>
-
-            {/* Back */}
 
             <div className="mt-5">
               <Button
@@ -496,94 +435,85 @@ export default function CheckoutPage() {
               RIGHT — ORDER SUMMARY
           ================================================== */}
 
-          <div className="lg:sticky lg:top-6">
-            <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] sm:p-6">
+          <div className="lg:sticky lg:top-24">
+            <div className="rounded-2xl border-2 border-foreground bg-card p-5 shadow-[6px_6px_0_0_var(--foreground)] sm:p-6 dark:border-gold dark:shadow-[6px_6px_0_0_var(--gold)]">
               <h2 className="text-base font-semibold text-foreground">
                 Order Summary
               </h2>
 
-              {/* Products */}
-
               <div className="mt-5 space-y-4">
-                {items.map((item) => (
-                  <div
-                    key={item.pizzaName}
-                    className="flex items-center justify-between gap-4"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted">
-                        <ShoppingBag className="h-4 w-4 text-muted-foreground/60" />
+                {items.map((item) => {
+                  const product = getProductByName(item.pizzaName);
+
+                  return (
+                    <div
+                      key={item.pizzaName}
+                      className="flex items-center justify-between gap-4"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted/40">
+                          {product ? (
+                            <Image
+                              src={product.image}
+                              alt={item.pizzaName}
+                              fill
+                              sizes="48px"
+                              className="object-contain p-1"
+                            />
+                          ) : (
+                            <ShoppingBag className="h-4 w-4 text-muted-foreground/60" />
+                          )}
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-foreground">
+                            {item.pizzaName}
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            Quantity: {item.quantity}
+                          </p>
+                        </div>
                       </div>
 
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-foreground">
-                          {item.pizzaName}
-                        </p>
-
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          Quantity: {item.quantity}
-                        </p>
-                      </div>
+                      <p className="shrink-0 text-sm font-semibold text-gold">
+                        {formatPrice(item.priceInCents * item.quantity)}
+                      </p>
                     </div>
-
-                    <p className="shrink-0 text-sm font-medium text-foreground">
-                      {formatPrice(item.priceInCents * item.quantity)}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-
-              {/* Divider */}
 
               <div className="my-6 h-px bg-border" />
 
-              {/* Price */}
-
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    Subtotal
-                  </span>
-
+                  <span className="text-muted-foreground">Subtotal</span>
                   <span className="font-medium text-foreground">
                     {formatPrice(totalInCents)}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    Delivery
-                  </span>
-
+                  <span className="text-muted-foreground">Delivery</span>
                   <span className="text-xs font-medium text-muted-foreground">
                     Calculated later
                   </span>
                 </div>
               </div>
 
-              {/* Divider */}
-
               <div className="my-5 h-px bg-border" />
-
-              {/* Total */}
 
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Total
-                  </p>
-
+                  <p className="text-sm font-medium text-foreground">Total</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Current order total
                   </p>
                 </div>
-
-                <p className="text-2xl font-semibold tracking-tight text-foreground">
+                <p className="font-heading text-2xl font-extrabold tracking-tight text-gold">
                   {formatPrice(totalInCents)}
                 </p>
               </div>
-
-              {/* Security */}
 
               <div className="mt-5 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
                 <Check className="h-3.5 w-3.5" />
@@ -593,6 +523,6 @@ export default function CheckoutPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
