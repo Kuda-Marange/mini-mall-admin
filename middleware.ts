@@ -15,6 +15,7 @@ const PUBLIC_PATHS = [
   "/product",
   "/cart",
   "/checkout",
+  "/track-order",
 ];
 
 export async function middleware(request: NextRequest) {

@@ -1,10 +1,13 @@
 import { getPizzaImage } from "@/lib/pizza-images";
 
+export type ProductBadge = "Best Seller" | "Veg" | "Spicy" | "New";
+
 export interface Product {
   name: string;
   description: string;
   priceInCents: number;
   image: string;
+  badge?: ProductBadge;
 }
 
 export const PRODUCTS: Product[] = [
@@ -13,6 +16,7 @@ export const PRODUCTS: Product[] = [
     description: "Classic tomato, fresh mozzarella, and basil.",
     priceInCents: 899,
     image: getPizzaImage("Margherita"),
+    badge: "Best Seller",
   },
   {
     name: "Pepperoni",
@@ -31,18 +35,21 @@ export const PRODUCTS: Product[] = [
     description: "Bell peppers, onions, mushrooms, and olives.",
     priceInCents: 899,
     image: getPizzaImage("Veggie"),
+    badge: "Veg",
   },
   {
     name: "Chicken Supreme",
     description: "Grilled chicken, peppers, and a smoky BBQ base.",
     priceInCents: 1199,
     image: getPizzaImage("Chicken Supreme"),
+    badge: "New",
   },
   {
     name: "Spicy Sausage",
     description: "Italian sausage with a chili kick.",
     priceInCents: 1299,
     image: getPizzaImage("Spicy Sausage"),
+    badge: "Spicy",
   },
   {
     name: "Lasagna",
