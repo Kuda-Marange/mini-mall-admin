@@ -226,9 +226,9 @@ export default function CheckoutPage() {
               <Button
                 type="button"
                 className="h-11 flex-1 rounded-full border-2 border-foreground shadow-[3px_3px_0_0_var(--foreground)] hover:translate-x-px hover:translate-y-px hover:shadow-[2px_2px_0_0_var(--foreground)] dark:border-gold dark:shadow-[3px_3px_0_0_var(--gold)] dark:hover:shadow-[2px_2px_0_0_var(--gold)]"
-                onClick={() => router.push("/")}
+                onClick={() => router.push(`/track-order/${placedOrderId}`)}
               >
-                Back to Home
+                Track This Order
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
