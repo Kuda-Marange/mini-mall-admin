@@ -24,6 +24,7 @@ const NAV_LINKS: NavLink[] = [
   { title: "Home", type: "link", href: "/shop" },
   { title: "Menu", type: "link", href: "/shop/menu" },
   { title: "Checkout", type: "link", href: "/checkout" },
+  { title: "Track Order", type: "link", href: "/track-order" },
 ];
 
 export function Header() {
@@ -38,8 +39,10 @@ export function Header() {
   // PageBanner on menu/cart/checkout/orders), the header stays see-through
   // until the visitor scrolls, so that band's background runs to the top
   // of the window. Add a route here whenever a page adopts PageBanner.
-  const BANNER_ROUTES = ["/shop", "/shop/menu", "/cart", "/checkout", "/orders"];
-  const overHero = BANNER_ROUTES.includes(pathname) && !scrolled;
+  const BANNER_ROUTES = ["/shop", "/shop/menu", "/cart", "/checkout", "/track-order"];
+  const overHero =
+    (BANNER_ROUTES.includes(pathname) || pathname.startsWith("/track-order/")) &&
+    !scrolled;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
