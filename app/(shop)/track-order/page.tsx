@@ -1,15 +1,33 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useSyncExternalStore, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 
 import { PageBanner } from "@/components/page-banner";
+import {
+  getRecentOrders,
+  removeRecentOrder,
+  subscribeToRecentOrders,
+  type RecentOrder,
+} from "@/lib/recent-orders";
+
+// Stable empty-array reference for SSR/first render — useSyncExternalStore
+// requires getServerSnapshot to return the same value each call, or it
+// treats every call as a change and re-renders in a loop.
+const EMPTY_ORDERS: RecentOrder[] = [];
 
 export default function TrackOrderPage() {
   const router = useRouter();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const recentOrders = useSyncExternalStore(
+    subscribeToRecentOrders,
+    getRecentOrders,
+    () => EMPTY_ORDERS
+  );
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -23,6 +41,10 @@ export default function TrackOrderPage() {
     router.push(`/track-order/${encodeURIComponent(trimmed.toUpperCase())}`);
   }
 
+  function handleRemove(orderCode: string) {
+    removeRecentOrder(orderCode);
+  }
+
   return (
     <div>
       <PageBanner
@@ -31,6 +53,46 @@ export default function TrackOrderPage() {
       />
 
       <section className="mx-auto max-w-xl px-4 py-14 sm:px-6 lg:px-8">
+        {recentOrders.length > 0 && (
+          <div className="mb-8">
+            <h2 className="mb-3 px-2 text-sm font-semibold text-foreground">
+              Your recent orders
+            </h2>
+
+            <ul className="flex flex-col gap-2">
+              {recentOrders.map((order) => (
+                <li key={order.code}>
+                  <div className="group flex items-center gap-2 rounded-full border-2 border-foreground bg-card p-1.5 pl-4 shadow-[3px_3px_0_0_var(--foreground)] dark:border-primary dark:shadow-[3px_3px_0_0_var(--primary)]">
+                    <Link
+                      href={`/track-order/${encodeURIComponent(order.code)}`}
+                      className="flex min-w-0 flex-1 items-center justify-between gap-3"
+                    >
+                      <span className="min-w-0 truncate text-sm font-medium">
+                        {order.pizzaName}
+                        <span className="ml-1.5 font-normal text-muted-foreground">
+                          · {order.customerName}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {order.code}
+                      </span>
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(order.code)}
+                      aria-label={`Remove ${order.code} from recent orders`}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <div className="flex items-center rounded-full border-2 border-foreground bg-card p-1.5 shadow-[5px_5px_0_0_var(--foreground)] dark:border-primary dark:shadow-[5px_5px_0_0_var(--primary)]">
             <input

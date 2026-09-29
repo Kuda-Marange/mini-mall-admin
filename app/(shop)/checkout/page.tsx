@@ -10,9 +10,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { PageBanner } from "@/components/page-banner";
+import { ReceiptView } from "@/components/receipt-view";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format-price";
 import { getProductByName } from "@/lib/products";
+import { saveRecentOrder } from "@/lib/recent-orders";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -24,6 +26,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import type { Order } from "@/lib/types";
 
 const checkoutFormSchema = z.object({
   customerName: z
@@ -87,6 +90,9 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
+  // Snapshot built right before clearCart() wipes the cart, so the
+  // confirmation screen and receipt still have item/total data afterward.
+  const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutFormSchema),
@@ -122,7 +128,38 @@ export default function CheckoutPage() {
         return;
       }
 
+      // Build the snapshot before the cart is cleared below — this is the
+      // only place we still have the item list and customer name together.
+      // orderedAt matches the "YYYY-MM-DD" shape real Supabase rows use.
+      const firstItemName = items[0]?.pizzaName ?? "Order";
+      const orderedAt = new Date().toISOString().slice(0, 10);
+
+      const orderSnapshot: Order = {
+        id: result.id,
+        customerName: values.customerName,
+        pizzaName: firstItemName,
+        orderedAt,
+        status: "pending",
+        amountInCents: totalInCents,
+        items: items.map((item) => ({
+          productName: item.pizzaName,
+          quantity: item.quantity,
+          priceInCents: item.priceInCents,
+        })),
+      };
+
+      const extraCount = orderSnapshot.items.length - 1;
+
+      saveRecentOrder({
+        code: result.id,
+        customerName: values.customerName,
+        pizzaName:
+          extraCount > 0 ? `${firstItemName} +${extraCount} more` : firstItemName,
+        placedAt: new Date().toISOString(),
+      });
+
       clearCart();
+      setPlacedOrder(orderSnapshot);
       setPlacedOrderId(result.id);
     } catch (err) {
       console.error("Failed to place order:", err);
@@ -232,6 +269,13 @@ export default function CheckoutPage() {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
+
+            {/* Receipt */}
+            {placedOrder && (
+              <div className="mt-4 flex justify-center">
+                <ReceiptView order={placedOrder} />
+              </div>
+            )}
           </div>
         </section>
       </div>
